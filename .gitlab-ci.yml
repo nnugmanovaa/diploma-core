@@ -1,0 +1,66 @@
+#include specified file
+include: '/gitlab-ci/.gitlab-ci-loan.yml'
+
+# This file is a template, and might need editing before it works on your project.
+# This is the Gradle build system for JVM applications
+# https://gradle.org/
+# https://github.com/gradle/gradle
+image: registry.gitlab.com/code_smith/pitech/core/pitech/pitech-base-alpine-jdk
+
+# Disable the Gradle daemon for Continuous Integration servers as correctness
+# is usually a priority over speed in CI environments. Using a fresh
+# runtime for each build is more reliable since the runtime is completely
+# isolated from any previous builds.
+variables:
+  DOCKER_DRIVER: overlay2
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  CI_SHORT_COMMIT_SHA: '$${CI_COMMIT_SHA:0:8}'
+  IMAGE_NAME: "$CI_REGISTRY/$CI_PROJECT_PATH"
+
+before_script:
+  - export GRADLE_USER_HOME=`pwd`/.gradle
+  - export BUILD_DATE=`date +%Y%m%d-%H%M%S`
+  - eval export CI_SHORT_COMMIT_SHA=${CI_SHORT_COMMIT_SHA}
+  - eval export RELEASE_IMAGE_TAG=$BUILD_DATE.$CI_SHORT_COMMIT_SHA
+
+stages:
+  - build
+  - release
+
+build_app:
+  stage: build
+  script:
+    - ./gradlew --build-cache assemble check
+  artifacts:
+    paths:
+      - build/libs
+    expire_in: 1 hour
+  cache:
+    key: "$CI_PROJECT_NAME"
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  only:
+    - branches
+  except:
+    - /^release.*/i
+    - master
+
+build_dev:
+  image: registry.gitlab.com/code_smith/pitech/core/pitech/pitech-docker-latest
+  services:
+    - registry.gitlab.com/code_smith/pitech/core/pitech/pitech-docker
+  stage: release
+  dependencies:
+    - build_app
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker login --username madghost --password 645725f9-7a4d-49d8-9f2a-7d8d18228300
+    - docker build --pull -t $IMAGE_NAME/app .
+    - docker tag $IMAGE_NAME/app $IMAGE_NAME/app:$RELEASE_IMAGE_TAG
+    - docker push $IMAGE_NAME/app:$RELEASE_IMAGE_TAG
+  only:
+    - branches
+  except:
+    - /^release.*/i
+    - master

@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.3.2-b608 (trunk-7979; 2015-01-21T12:50:19+0000) JAXWS-RI/2.2.11-b150120.1832 JAXWS-API/2.2.12 JAXB-RI/2.2.12-b141219.1637 JAXB-API/2.2.13-b141020.1521 svn-revision#unknown. --><xs:schema xmlns:tns="http://web.service.closedContracts.fcb.com/" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://web.service.closedContracts.fcb.com/">
+
+<xs:element name="Exception" type="tns:Exception"/>
+
+<xs:element name="ServiceReturn" type="tns:serviceReturn"/>
+
+<xs:element name="getContractSum" type="tns:getContractSum"/>
+
+<xs:element name="getContractSumResponse" type="tns:getContractSumResponse"/>
+
+<xs:element name="header" nillable="true" type="tns:CigWsHeader"/>
+
+<xs:complexType name="getContractSum">
+<xs:sequence>
+<xs:element name="IIN" type="xs:string"/>
+<xs:element name="consentConfirmed" type="xs:string"/>
+<xs:element name="parentCode" type="xs:int" nillable="true"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="CigWsHeader">
+<xs:sequence>
+<xs:element name="Culture" type="xs:string" minOccurs="0"/>
+<xs:element name="Password" type="xs:string" minOccurs="0"/>
+<xs:element name="SecurityToken" type="xs:string" minOccurs="0"/>
+<xs:element name="UserId" type="xs:int"/>
+<xs:element name="UserName" type="xs:string" minOccurs="0"/>
+<xs:element name="Version" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getContractSumResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:serviceReturn" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="serviceReturn">
+<xs:sequence>
+<xs:element name="iin" type="xs:string" minOccurs="0"/>
+<xs:element name="firstName" type="xs:string" minOccurs="0"/>
+<xs:element name="middleName" type="xs:string" minOccurs="0"/>
+<xs:element name="lastName" type="xs:string" minOccurs="0"/>
+<xs:element name="maxPaymentSum" type="xs:string" minOccurs="0"/>
+<xs:element name="maxContractSum" type="xs:string" minOccurs="0"/>
+<xs:element name="statusCode" type="xs:int"/>
+<xs:element name="statusMessage" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Exception">
+<xs:sequence>
+<xs:element name="message" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

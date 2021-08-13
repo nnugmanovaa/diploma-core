@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://tempuri.org/" xmlns:ns3="http://bip.bee.kz/SyncChannel/v10/Types/Request" xmlns:ns2="http://bip.bee.kz/SyncChannel/v10/Types" xmlns:ns1="http://bip.bee.kz/SyncChannel/v10/Interfaces" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://tempuri.org/">
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Interfaces" schemaLocation="./kdnService_9.xsd" />
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types" schemaLocation="./kdnService_8.xsd" />
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types/Request" schemaLocation="./kdnService_7.xsd" />
+
+<xs:element name="getReport">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="request" type="ns3:SyncSendMessageRequest" form="qualified" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+
+<xs:element name="getReportResponse">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="return" minOccurs="0">
+<xs:complexType mixed="true">
+<xs:sequence>
+<xs:any processContents="lax" namespace="##other" minOccurs="0" maxOccurs="unbounded" />
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+
+<xs:complexType name="response">
+<xs:sequence>
+<xs:element name="responseData" type="tns:responseData" minOccurs="0" />
+<xs:element name="responseInfo" type="tns:responseInfo" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="responseData">
+<xs:sequence>
+<xs:element name="data" type="tns:data" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="data">
+<xs:sequence>
+<xs:element name="messageId" type="xs:string" minOccurs="0" />
+<xs:element name="messageDate" type="xs:string" minOccurs="0" />
+<xs:element name="requestId" type="xs:string" minOccurs="0" />
+<xs:element name="senderCode" type="xs:string" minOccurs="0" />
+<xs:element name="sender" type="tns:dictionary" minOccurs="0" />
+<xs:element name="receiver" type="tns:dictionary" minOccurs="0" />
+<xs:element name="messageResult" type="tns:dictionary" minOccurs="0" />
+<xs:element name="businessdata" type="tns:businessData" minOccurs="0" />
+</xs:sequence>
+<xs:attribute name="Id" type="xs:string" />
+</xs:complexType>
+
+<xs:complexType name="dictionary">
+<xs:sequence>
+<xs:element name="changeDate" type="xs:string" minOccurs="0" />
+<xs:element name="code" type="xs:string" minOccurs="0" />
+<xs:element name="nameKz" type="xs:string" minOccurs="0" />
+<xs:element name="nameRu" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="businessData">
+<xs:sequence>
+<xs:element name="firstname" type="xs:string" minOccurs="0" />
+<xs:element name="lastname" type="xs:string" minOccurs="0" />
+<xs:element name="middlename" type="xs:string" minOccurs="0" />
+<xs:element name="birthdate" type="xs:string" minOccurs="0" />
+<xs:element name="iin" type="xs:string" minOccurs="0" />
+<xs:element name="period" type="xs:string" minOccurs="0" />
+<xs:element name="NewDataSet" minOccurs="0">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="Table" type="tns:table" minOccurs="0" maxOccurs="unbounded" />
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="table">
+<xs:sequence>
+<xs:element name="DATE_OPR" type="xs:string" minOccurs="0" />
+<xs:element name="F50_GUARANTOR_RNN" type="xs:string" minOccurs="0" />
+<xs:element name="F52B_GUARANTOR_BANK_NAME" type="xs:string" minOccurs="0" />
+<xs:element name="NAME_OPR" type="xs:string" minOccurs="0" />
+<xs:element name="PAY_ASSIGN" type="xs:string" minOccurs="0" />
+<xs:element name="SUMM_DB" type="xs:string" minOccurs="0" />
+<xs:element name="SUMM_DB_NETTO" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="responseInfo">
+<xs:sequence>
+<xs:element name="correlationId" type="xs:string" minOccurs="0" />
+<xs:element name="messageId" type="xs:string" minOccurs="0" />
+<xs:element name="responseDate" type="xs:string" minOccurs="0" />
+<xs:element name="sessionId" type="xs:string" minOccurs="0" />
+<xs:element name="status" type="tns:status" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="status">
+<xs:sequence>
+<xs:element name="code" type="xs:int" />
+<xs:element name="message" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

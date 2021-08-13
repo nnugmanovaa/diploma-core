@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="JSON">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+  </appender>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="CONSOLE">
+    <encoder>
+      <charset>utf-8</charset>
+      <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} [%thread] %-5level %X{reqId} %X{reqUser} [%logger{36}.%M] %msg%n
+      </pattern>
+    </encoder>
+    <target>System.out</target>
+  </appender>
+  <root level="INFO">
+    <springProfile name="local | test-ci">
+      <appender-ref ref="CONSOLE"/>
+    </springProfile>
+    <springProfile name="dev | pre | production">
+      <appender-ref ref="JSON"/>
+    </springProfile>
+  </root>
+</configuration>

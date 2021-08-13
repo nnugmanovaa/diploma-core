@@ -1,0 +1,210 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://web.incomes.service.fcb.com/" xmlns:ns2="http://bip.bee.kz/SyncChannel/v10/Types/Response" xmlns:ns1="http://bip.bee.kz/SyncChannel/v10/Types" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://web.incomes.service.fcb.com/">
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types" schemaLocation="./kdnService_8.xsd" />
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types/Response" schemaLocation="./kdnService_6.xsd" />
+
+<xs:element name="AvailableReports" type="tns:availableReports" />
+
+<xs:element name="Report" type="xs:anyType" />
+
+<xs:element name="getAvailableReport" type="tns:getAvailableReport" />
+
+<xs:element name="getAvailableReportResponse" type="tns:getAvailableReportResponse" />
+
+<xs:element name="getAvailableReports" type="tns:getAvailableReports" />
+
+<xs:element name="getAvailableReportsResponse" type="tns:getAvailableReportsResponse" />
+
+<xs:element name="getDescription" type="tns:getDescription" />
+
+<xs:element name="getDescriptionResponse" type="tns:getDescriptionResponse" />
+
+<xs:element name="getReport" type="tns:getReport" />
+
+<xs:element name="getReportCrtr" type="tns:getReportCrtr" />
+
+<xs:element name="getReportCrtrResponse" type="tns:getReportCrtrResponse" />
+
+<xs:element name="getReportCrtrV2" type="tns:getReportCrtrV2" />
+
+<xs:element name="getReportCrtrV2Response" type="tns:getReportCrtrV2Response" />
+
+<xs:element name="getReportResponse" type="tns:getReportResponse" />
+
+<xs:element name="header" type="tns:CigWsHeader" />
+
+<xs:complexType name="report">
+<xs:sequence>
+<xs:element name="fcbStatus" type="xs:string" minOccurs="0" />
+<xs:element name="fcbMessage" type="xs:string" minOccurs="0" />
+<xs:element name="result" minOccurs="0">
+<xs:complexType mixed="true">
+<xs:sequence>
+<xs:any processContents="lax" namespace="##other" minOccurs="0" maxOccurs="unbounded" />
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="request">
+<xs:sequence>
+<xs:element name="agreement" type="xs:boolean" />
+<xs:element name="birthDate" type="xs:string" minOccurs="0" />
+<xs:element name="firstName" type="xs:string" minOccurs="0" />
+<xs:element name="id" type="xs:string" minOccurs="0" />
+<xs:element name="iin" type="xs:string" minOccurs="0" />
+<xs:element name="lastName" type="xs:string" minOccurs="0" />
+<xs:element name="middleName" type="xs:string" minOccurs="0" />
+<xs:element name="period" type="xs:int" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getReportCrtr">
+<xs:sequence>
+<xs:element name="request" type="tns:requestCrtr" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="requestCrtr">
+<xs:sequence>
+<xs:element name="agreement" type="xs:boolean" />
+<xs:element name="id" type="xs:string" minOccurs="0" />
+<xs:element name="iin" type="xs:string" minOccurs="0" />
+<xs:element name="requestType" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getAvailableReports">
+<xs:sequence>
+<xs:element name="request" type="tns:request" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getDescriptionResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:webServiceDescription" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="webServiceDescription">
+<xs:sequence>
+<xs:element name="production" type="xs:boolean" minOccurs="0" />
+<xs:element name="serviceDescription" type="xs:string" minOccurs="0" />
+<xs:element name="serviceName" type="xs:string" minOccurs="0" />
+<xs:element name="version" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getReport">
+<xs:sequence>
+<xs:element name="request" type="tns:request" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getDescription">
+<xs:sequence />
+</xs:complexType>
+
+<xs:complexType name="availableReports">
+<xs:sequence>
+<xs:element name="fcbStatus" type="xs:string" minOccurs="0" />
+<xs:element name="fcbMessage" type="xs:string" minOccurs="0" />
+<xs:element name="requestIds" minOccurs="0">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="requestId" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded" />
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getAvailableReport">
+<xs:sequence>
+<xs:element name="requestId" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getReportCrtrResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:reportCrtr" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="reportCrtr">
+<xs:sequence>
+<xs:element name="fcbStatus" type="xs:string" minOccurs="0" />
+<xs:element name="fcbMessage" type="xs:string" minOccurs="0" />
+<xs:element name="result" type="ns2:SyncSendMessageResponse" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getAvailableReportsResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:availableReports" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getReportCrtrV2">
+<xs:sequence>
+<xs:element name="request" type="tns:requestCrtr" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getReportCrtrV2Response">
+<xs:sequence>
+<xs:element name="return" type="tns:reportCrtrV2" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="reportCrtrV2">
+<xs:sequence>
+<xs:element name="fcbStatus" type="xs:string" minOccurs="0" />
+<xs:element name="fcbMessage" type="xs:string" minOccurs="0" />
+<xs:element name="result" type="ns2:SyncSendMessageResponse" minOccurs="0" />
+<xs:element name="resultASP" type="tns:resultASP" minOccurs="0" />
+<xs:element name="resultESP" type="tns:resultESP" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="resultASP">
+<xs:sequence>
+<xs:element name="PersonLargeFamilyResponse" type="xs:anyType" minOccurs="0" />
+<xs:element name="errorCode" type="xs:string" minOccurs="0" />
+<xs:element name="errorMessage" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="resultESP">
+<xs:sequence>
+<xs:element name="singleAggregatePaymentResponse" type="xs:anyType" minOccurs="0" />
+<xs:element name="errorCode" type="xs:string" minOccurs="0" />
+<xs:element name="errorMessage" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="CigWsHeader">
+<xs:sequence>
+<xs:element name="Culture" type="xs:string" minOccurs="0" />
+<xs:element name="Password" type="xs:string" minOccurs="0" />
+<xs:element name="SecurityToken" type="xs:string" minOccurs="0" />
+<xs:element name="UserId" type="xs:int" />
+<xs:element name="UserName" type="xs:string" minOccurs="0" />
+<xs:element name="Version" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getReportResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:report" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getAvailableReportResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:report" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

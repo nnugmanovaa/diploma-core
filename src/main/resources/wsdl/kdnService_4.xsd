@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://kdn2.ws.creditinfo.com/" xmlns:ns4="http://bip.bee.kz/SyncChannel/v10/Types/Response" xmlns:ns3="http://bip.bee.kz/SyncChannel/v10/Types" xmlns:ns2="http://web.incomes.service.fcb.com/" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://kdn2.ws.creditinfo.com/">
+
+<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="./kdnService_1.xsd" />
+
+<xs:import namespace="http://web.incomes.service.fcb.com/" schemaLocation="./kdnService_2.xsd" />
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types" schemaLocation="./kdnService_8.xsd" />
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types/Response" schemaLocation="./kdnService_6.xsd" />
+
+<xs:element name="CigWsHeader" nillable="true" type="tns:CigWsHeader" />
+
+<xs:element name="StorekdnReq" type="tns:StoreKDNReq" />
+
+<xs:element name="StorekdnReqV2" nillable="true" type="tns:StoreKDNReq" />
+
+<xs:element name="StorekdnReqWithIncome" type="tns:StorekdnReqWithIncome" />
+
+<xs:element name="kdnReqResponse" type="tns:kdnReqResponse" />
+
+<xs:complexType name="StorekdnReqWithIncome">
+<xs:sequence>
+<xs:element name="application" type="tns:kdnRequest2" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="kdnRequest2">
+<xs:sequence>
+<xs:element name="IIN" type="xs:string" />
+<xs:element name="consentConfirmed" type="xs:int" />
+<xs:element name="hideDebts" type="xs:boolean" minOccurs="0" />
+<xs:element name="income" type="xs:string" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="kdnReqResponse">
+<xs:sequence>
+<xs:element name="return" type="tns:kdnReqResponseReturn" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="kdnReqResponseReturn">
+<xs:sequence>
+<xs:element name="applicationReport" type="tns:applicationReport" minOccurs="0" />
+<xs:element name="ReportDate" type="xs:string" minOccurs="0" />
+<xs:element name="Id" type="xs:int" />
+<xs:element name="errorCode" type="xs:int" />
+<xs:element name="errorMessage" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="applicationReport">
+<xs:sequence>
+<xs:element name="RequestId" type="xs:string" minOccurs="0" />
+<xs:element name="credtinfoid" type="xs:string" minOccurs="0" />
+<xs:element name="dateApplication" type="xs:dateTime" minOccurs="0" />
+<xs:element name="IIN" type="xs:string" minOccurs="0" />
+<xs:element name="lastname" type="xs:string" minOccurs="0" />
+<xs:element name="firstname" type="xs:string" minOccurs="0" />
+<xs:element name="fathername" type="xs:string" minOccurs="0" />
+<xs:element name="dateofbirth" type="xs:string" minOccurs="0" />
+<xs:element name="kdn_score" type="xs:string" minOccurs="0" />
+<xs:element name="debt" type="xs:string" minOccurs="0" />
+<xs:element name="income" type="xs:string" minOccurs="0" />
+<xs:element name="IncomesServiceResponse" type="ns1:incomesServiceResponse" minOccurs="0" />
+<xs:element name="IncomesResult" type="ns2:report" minOccurs="0" />
+<xs:element name="IncomesResultCrtr" type="ns2:reportCrtr" minOccurs="0" />
+<xs:element name="incomesResultCrtrV2" type="ns2:reportCrtrV2" minOccurs="0" />
+<xs:element name="flag1" type="xs:string" minOccurs="0" />
+<xs:element name="flag2" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="StoreKDNReq">
+<xs:sequence>
+<xs:element name="applicationReq" type="tns:kdnRequest" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="kdnRequest">
+<xs:sequence>
+<xs:element name="IIN" type="xs:string" />
+<xs:element name="Lastname" type="xs:string" minOccurs="0" />
+<xs:element name="Firstname" type="xs:string" minOccurs="0" />
+<xs:element name="Middlename" type="xs:string" minOccurs="0" />
+<xs:element name="Birthdate" type="xs:string" minOccurs="0" />
+<xs:element name="consentConfirmed" type="xs:int" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="CigWsHeader">
+<xs:sequence>
+<xs:element name="Culture" type="xs:string" />
+<xs:element name="Password" type="xs:string" />
+<xs:element name="UserName" type="xs:string" />
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

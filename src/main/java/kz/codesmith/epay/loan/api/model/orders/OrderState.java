@@ -1,0 +1,17 @@
+package kz.codesmith.epay.loan.api.model.orders;
+
+public enum OrderState {
+  NEW,
+  SCORING,
+  APPROVED,
+  REJECTED,
+  CONFIRMED,
+  CASHED_OUT_WALLET,
+  CASH_OUT_WALLET_INITIALIZED,
+  CASH_OUT_WALLET_FAILED,
+  CASHED_OUT_CARD,
+  CASH_OUT_CARD_INITIALIZED,
+  CASH_OUT_CARD_FAILED,
+  CLOSED,
+  ALTERNATIVE
+}

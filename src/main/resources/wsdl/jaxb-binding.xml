@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<jaxb:bindings
+  xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  version="2.1"
+  jaxb:extensionBindingPrefixes="xjc annox"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/jaxb http://java.sun.com/xml/ns/jaxb/bindingschema_2_0.xsd">
+  <jaxb:globalBindings>
+    <xjc:javaType adapter="kz.codesmith.epay.loan.api.util.LocalDateAdapter"
+      name="java.time.LocalDate" xmlType="xs:date"/>
+    <xjc:javaType adapter="kz.codesmith.epay.loan.api.util.LocalDateTimeAdapter"
+      name="java.time.LocalDateTime" xmlType="xs:dateTime"/>
+    <xjc:serializable uid="7702"/>
+  </jaxb:globalBindings>
+
+</jaxb:bindings>

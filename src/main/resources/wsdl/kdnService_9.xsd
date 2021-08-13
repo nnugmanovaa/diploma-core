@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://bip.bee.kz/SyncChannel/v10/Interfaces" xmlns:ns1="http://www.w3.org/2000/09/xmldsig#" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://bip.bee.kz/SyncChannel/v10/Interfaces">
+
+<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="./kdnService_1.xsd" />
+
+<xs:import />
+
+<xs:element name="BaseResponse" type="tns:baseResponse" />
+
+<xs:element name="RequestBilling" type="tns:RequestBilling" />
+
+<xs:element name="RequestReport" type="tns:RequestReport" />
+
+<xs:element name="ResponseReport" type="tns:ResponseReport" />
+
+<xs:complexType name="RequestBilling">
+<xs:sequence>
+<xs:element name="documentIssueDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="documentNumber" type="xs:string" minOccurs="0" />
+<xs:element name="requestNumber" type="xs:string" minOccurs="0" />
+<xs:element name="requestType" type="xs:string" minOccurs="0" />
+<xs:element name="bankBin" type="xs:string" minOccurs="0" />
+<xs:element name="agreement" type="xs:string" minOccurs="0" />
+<xs:element name="person" type="tns:person" minOccurs="0" />
+<xs:element ref="ns1:Signature" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="person">
+<xs:sequence>
+<xs:element name="birthDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="fatherName" type="xs:string" minOccurs="0" />
+<xs:element name="iin" type="xs:string" minOccurs="0" />
+<xs:element name="name" type="xs:string" minOccurs="0" />
+<xs:element name="surname" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="deductionResponse">
+<xs:complexContent>
+<xs:extension base="tns:baseResponse">
+<xs:sequence>
+<xs:element name="request" type="tns:RequestBilling" minOccurs="0" maxOccurs="unbounded" />
+</xs:sequence>
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="baseResponse">
+<xs:sequence>
+<xs:element name="responseCode" type="xs:string" minOccurs="0" />
+<xs:element name="requestNumber" type="xs:string" minOccurs="0" />
+<xs:element name="requestIin" type="xs:string" minOccurs="0" />
+<xs:element name="responseDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="responseNumber" type="xs:string" minOccurs="0" />
+<xs:element name="assignmentDate" type="xs:date" minOccurs="0" />
+<xs:element name="paymentAverage" type="xs:double" minOccurs="0" />
+<xs:element name="paymentCount" type="xs:int" minOccurs="0" />
+<xs:element name="averageAmount" type="xs:double" minOccurs="0" />
+<xs:element name="deductionsShort" type="tns:deduction" nillable="true" minOccurs="0" maxOccurs="unbounded" />
+<xs:element name="deductionsDetailed" type="tns:deductionDetailed" nillable="true" minOccurs="0" maxOccurs="unbounded" />
+<xs:element name="request" type="tns:RequestBilling" minOccurs="0" />
+<xs:element ref="ns1:Signature" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="deduction">
+<xs:sequence>
+<xs:element name="bin" type="xs:string" minOccurs="0" />
+<xs:element name="date" type="xs:dateTime" minOccurs="0" />
+<xs:element name="name" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="deductionDetailed">
+<xs:complexContent>
+<xs:extension base="tns:deduction">
+<xs:sequence>
+<xs:element name="amount" type="xs:double" minOccurs="0" />
+</xs:sequence>
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="deductionDetailedResponse">
+<xs:complexContent>
+<xs:extension base="tns:deductionResponse">
+<xs:sequence />
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
+
+<xs:complexType name="ResponseReport">
+<xs:sequence>
+<xs:element name="responseCode" type="xs:string" minOccurs="0" />
+<xs:element name="responseNumber" type="xs:string" minOccurs="0" />
+<xs:element name="responseDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="responseBeginDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="responseEndDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="successCount" type="xs:int" minOccurs="0" />
+<xs:element name="iinNotFound" type="xs:int" minOccurs="0" />
+<xs:element name="missingParameterCount" type="xs:int" minOccurs="0" />
+<xs:element name="requestDuplicateNumber" type="xs:int" minOccurs="0" />
+<xs:element name="wrongFIOCount" type="xs:int" minOccurs="0" />
+<xs:element name="accessDeniedCount" type="xs:int" minOccurs="0" />
+<xs:element name="badSignatureCount" type="xs:int" minOccurs="0" />
+<xs:element name="paymentsNotFound" type="xs:int" minOccurs="0" />
+<xs:element ref="ns1:Signature" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="RequestReport">
+<xs:sequence>
+<xs:element name="requestNumber" type="xs:string" minOccurs="0" />
+<xs:element name="requestType" type="xs:string" />
+<xs:element name="requestDate" type="xs:dateTime" minOccurs="0" />
+<xs:element name="requestPeriodFrom" type="xs:dateTime" minOccurs="0" />
+<xs:element name="requestPeriodTo" type="xs:dateTime" minOccurs="0" />
+<xs:element name="requestCompany" type="xs:int" minOccurs="0" />
+<xs:element ref="ns1:Signature" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:simpleType name="requestType">
+<xs:restriction base="xs:string">
+<xs:enumeration value="MONTH" />
+<xs:enumeration value="TREE_MONTH" />
+<xs:enumeration value="SIX_MONTH" />
+<xs:enumeration value="ONE_YEAR" />
+<xs:enumeration value="DEDUCTION_3" />
+<xs:enumeration value="DEDUCTION_6" />
+<xs:enumeration value="DEDUCTION_12" />
+<xs:enumeration value="DEDUCTION_36" />
+<xs:enumeration value="SOCIAL_6" />
+<xs:enumeration value="SOCIAL_12" />
+<xs:enumeration value="PENSION_6" />
+<xs:enumeration value="PENSION_12" />
+</xs:restriction>
+</xs:simpleType>
+</xs:schema>

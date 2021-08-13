@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.7-b01-. --><xs:schema xmlns:tns="http://bip.bee.kz/SyncChannel/v10/Types" xmlns:ns4="http://www.w3.org/2000/09/xmldsig#" xmlns:ns3="http://tempuri.org/" xmlns:ns2="http://bip.bee.kz/SyncChannel/v10/Types/Request" xmlns:ns1="http://bip.bee.kz/common/v10/Types" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="http://bip.bee.kz/SyncChannel/v10/Types">
+
+<xs:import namespace="http://bip.bee.kz/common/v10/Types" schemaLocation="./kdnService_5.xsd" />
+
+<xs:import namespace="http://bip.bee.kz/SyncChannel/v10/Types/Request" schemaLocation="./kdnService_7.xsd" />
+
+<xs:import namespace="http://tempuri.org/" schemaLocation="./kdnService_3.xsd" />
+
+<xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="./kdnService_1.xsd" />
+
+<xs:element name="SendMessage">
+<xs:complexType>
+<xs:sequence>
+<xs:element name="request" type="ns2:SyncSendMessageRequest" nillable="true" />
+</xs:sequence>
+</xs:complexType>
+</xs:element>
+
+<xs:element name="SendMessageFault1_SendMessageFault" type="ns1:ErrorInfo" />
+
+<xs:element name="SendMessageResponse" nillable="true" type="xs:anyType" />
+
+<xs:complexType name="SyncMessageInfoResponse">
+<xs:sequence>
+<xs:element name="messageId" type="xs:string" />
+<xs:element name="correlationId" type="xs:string" minOccurs="0" />
+<xs:element name="responseDate" type="xs:dateTime" />
+<xs:element name="status" type="ns1:StatusInfo" />
+<xs:element name="sessionId" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="SyncMessageInfo">
+<xs:sequence>
+<xs:element name="messageId" type="xs:string" />
+<xs:element name="correlationId" type="xs:string" minOccurs="0" />
+<xs:element name="serviceId" type="xs:string" />
+<xs:element name="messageDate" type="xs:dateTime" />
+<xs:element name="routeId" type="xs:string" minOccurs="0" />
+<xs:element name="sender" type="ns1:SenderInfo" />
+<xs:element name="properties" type="ns1:Property" nillable="true" minOccurs="0" maxOccurs="unbounded" />
+<xs:element name="sessionId" type="xs:string" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="SendMessageResponse">
+<xs:sequence>
+<xs:element name="response" type="ns3:response" minOccurs="0" />
+</xs:sequence>
+</xs:complexType>
+</xs:schema>

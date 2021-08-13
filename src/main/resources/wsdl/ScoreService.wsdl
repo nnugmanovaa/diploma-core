@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.3.2-b608 (trunk-7979; 2015-01-21T12:50:19+0000) JAXWS-RI/2.2.11-b150120.1832 JAXWS-API/2.2.12 JAXB-RI/2.2.12-b141219.1637 JAXB-API/2.2.13-b141020.1521 svn-revision#unknown. --><wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://score.ws.creditinfo.com/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" targetNamespace="http://score.ws.creditinfo.com/">
+	<wsdl:types>
+		<s:schema elementFormDefault="qualified" targetNamespace="http://score.ws.creditinfo.com/">
+			<s:element name="CigWsHeader" type="tns:CigWsHeader"/>
+			<s:complexType name="CigWsHeader">
+				<s:sequence>
+					<s:element minOccurs="0" maxOccurs="1" name="Culture" type="s:string"/>
+					<s:element minOccurs="0" maxOccurs="1" name="Password" type="s:string"/>
+					<s:element minOccurs="0" maxOccurs="1" name="SecurityToken" type="s:string"/>
+					<s:element minOccurs="1" maxOccurs="1" name="UserId" type="s:int"/>
+					<s:element minOccurs="0" maxOccurs="1" name="UserName" type="s:string"/>
+					<s:element minOccurs="0" maxOccurs="1" name="Version" type="s:string"/>
+				</s:sequence>
+				<s:anyAttribute/>
+			</s:complexType>
+			<s:element name="GetScoreCards" type="tns:GetScoreCards"/>
+			<s:element name="GetScoreCardsResponse" type="tns:GetScoreCardsResponse"/>
+			<s:element name="Score" type="tns:Score"/>
+			<s:element name="ScoreResponse" type="tns:ScoreResponse"/>
+			<s:complexType name="scoreAttribute">
+				<s:sequence>
+					<s:element name="name" type="s:string" minOccurs="0"/>
+					<s:element name="value" type="s:string" minOccurs="0"/>
+					<s:element name="values" type="tns:scoreValue" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="scoreCause">
+				<s:sequence>
+					<s:element name="name" type="s:string" minOccurs="0"/>
+					<s:element name="causeText" type="s:string" minOccurs="0"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="Score">
+				<s:sequence>
+					<s:element name="ScoreCard" type="s:string" minOccurs="0"/>
+					<s:element name="attributes" type="tns:scoreAttribute" minOccurs="0" maxOccurs="unbounded"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="scoreValue">
+				<s:sequence>
+					<s:element name="id" type="s:int"/>
+					<s:element name="value" type="s:string" minOccurs="0"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="scoreData">
+				<s:sequence>
+					<s:element name="IdQuery" type="s:int"/>
+					<s:element name="ErrorCode" type="s:int"/>
+					<s:element name="ErrorString" type="s:string" minOccurs="0"/>
+					<s:element name="Score" type="s:double"/>
+					<s:element name="OneYearProbabilityOfDefault" type="s:string"/>
+					<s:element name="RiskGrade" type="s:string"/>
+					<s:element name="BadRate" type="s:string"/>
+					<s:element name="Causes" type="tns:scoreCause" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+                                        <s:element name="ScoreByML" type="s:double" minOccurs="0"/>
+                                        <s:element name="RiskGradeByML" type="s:string" minOccurs="0"/>
+                                        <s:element name="OneYearProbabilityOfDefaultByML" type="s:string" minOccurs="0"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="ScoreResponse">
+				<s:sequence>
+					<s:element name="return" type="tns:scoreData"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="GetScoreCards">
+				<s:sequence/>
+			</s:complexType>
+			<s:complexType name="GetScoreCardsResponse">
+				<s:sequence>
+					<s:element name="return" type="tns:scoreCard" minOccurs="0" maxOccurs="unbounded"/>
+				</s:sequence>
+			</s:complexType>
+			<s:complexType name="scoreCard">
+				<s:sequence>
+					<s:element name="attributes" type="tns:scoreAttribute" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+					<s:element name="name" type="s:string" minOccurs="0"/>
+				</s:sequence>
+			</s:complexType>
+		</s:schema>
+	</wsdl:types>
+	<wsdl:message name="GetScoreCards">
+		<wsdl:part name="parameters" element="tns:GetScoreCards"/>
+	</wsdl:message>
+	<wsdl:message name="GetScoreCardsCigWsHeader">
+		<wsdl:part name="CigWsHeader" element="tns:CigWsHeader"/>
+	</wsdl:message>
+	<wsdl:message name="GetScoreCardsResponse">
+		<wsdl:part name="parameters" element="tns:GetScoreCardsResponse"/>
+	</wsdl:message>
+	<wsdl:message name="Score">
+		<wsdl:part name="parameters" element="tns:Score"/>
+	</wsdl:message>
+	<wsdl:message name="ScoreCigWsHeader">
+		<wsdl:part name="CigWsHeader" element="tns:CigWsHeader"/>
+	</wsdl:message>
+	<wsdl:message name="ScoreResponse">
+		<wsdl:part name="parameters" element="tns:ScoreResponse"/>
+	</wsdl:message>
+	<wsdl:portType name="ScoreService">
+		<wsdl:operation name="GetScoreCards">
+			<wsdl:input message="tns:GetScoreCards"/>
+			<wsdl:output message="tns:GetScoreCardsResponse"/>
+		</wsdl:operation>
+		<wsdl:operation name="Score">
+			<wsdl:input message="tns:Score"/>
+			<wsdl:output message="tns:ScoreResponse"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="ScoreServicePortBinding" type="tns:ScoreService">
+		<soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="GetScoreCards">
+			<soap:operation soapAction="http://ws.creditinfo.com/GetScoreCards" style="document"/>
+			<wsdl:input>
+				<soap:body use="literal"/>
+				<soap:header message="tns:GetScoreCardsCigWsHeader" part="CigWsHeader" use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal"/>
+				<soap:header message="tns:GetScoreCardsCigWsHeader" part="CigWsHeader" use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="Score">
+			<soap:operation soapAction="http://ws.creditinfo.com/Score"/>
+			<wsdl:input>
+				<soap:body use="literal"/>
+				<soap:header message="tns:ScoreCigWsHeader" part="CigWsHeader" use="literal"/>
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal"/>
+				<soap:header message="tns:ScoreCigWsHeader" part="CigWsHeader" use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="ScoreService">
+		<wsdl:port name="ScoreServicePort" binding="tns:ScoreServicePortBinding">
+			<soap:address location="http://test2.1cb.kz/ScoreService/ScoreService"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

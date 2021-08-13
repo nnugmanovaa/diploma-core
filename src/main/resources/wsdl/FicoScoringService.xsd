@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?><!-- Published by JAX-WS RI (http://jax-ws.java.net). RI's version is Metro/2.3.2-b608 (trunk-7979; 2015-01-21T12:50:19+0000) JAXWS-RI/2.2.11-b150120.1832 JAXWS-API/2.2.12 JAXB-RI/2.2.12-b141219.1637 JAXB-API/2.2.13-b141020.1521 svn-revision#unknown. --><xs:schema xmlns:tns="http://fico.fcb.com.kz/" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://fico.fcb.com.kz/">
+
+<xs:element name="Exception" type="tns:Exception"/>
+
+<xs:element name="Score" type="tns:result"/>
+
+<xs:element name="cigHeader" type="tns:cigHeader"/>
+
+<xs:element name="getScore" type="tns:getScore"/>
+
+<xs:element name="getScoreResponse" type="tns:getScoreResponse"/>
+
+<xs:complexType name="getScore">
+<xs:sequence>
+<xs:element name="CigHeader" type="tns:cigHeader" form="unqualified"/>
+<xs:element name="iin" type="xs:string" form="unqualified"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="cigHeader">
+<xs:sequence>
+<xs:element name="password" type="xs:string"/>
+<xs:element name="user" type="xs:string"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="getScoreResponse">
+<xs:sequence>
+<xs:element name="Score" type="tns:result" form="unqualified" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="result">
+<xs:sequence>
+<xs:element name="uniqueID" type="xs:string" minOccurs="0"/>
+<xs:element name="iin" type="xs:string" minOccurs="0"/>
+<xs:element name="firstName" type="xs:string" minOccurs="0"/>
+<xs:element name="middleName" type="xs:string" minOccurs="0"/>
+<xs:element name="lastName" type="xs:string" minOccurs="0"/>
+<xs:element name="dateOfBirth" type="xs:dateTime" minOccurs="0"/>
+<xs:element name="dateOfRequest" type="xs:dateTime" minOccurs="0"/>
+<xs:element name="errorCode" type="xs:int"/>
+<xs:element name="exclusionCode" type="xs:int"/>
+<xs:element name="score" type="xs:int"/>
+<xs:element name="badRate" type="xs:string" minOccurs="0"/>
+<xs:element name="reasonCode" type="xs:string" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+<xs:element name="scoreByML" type="xs:double" minOccurs="0"/>
+<xs:element name="riskGradeByML" type="xs:string" minOccurs="0"/>
+<xs:element name="oneYearProbabilityOfDefaultByML" type="xs:string" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Exception">
+<xs:sequence>
+<xs:element name="message" type="xs:string" form="unqualified" minOccurs="0"/>
+</xs:sequence>
+</xs:complexType>
+</xs:schema>
