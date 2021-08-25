@@ -27,9 +27,8 @@ build_release_loan-api:
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker login --username madghost --password 645725f9-7a4d-49d8-9f2a-7d8d18228300
-    - docker build --pull -t $IMAGE_NAME/app .
-    - docker tag $IMAGE_NAME/app $IMAGE_NAME/app:dev
-    - docker push $IMAGE_NAME/app:dev
+    - docker build --pull -t $IMAGE_NAME:dev .
+    - docker push $IMAGE_NAME:dev
   only:
     refs:
       - /^release.*/i
@@ -43,9 +42,8 @@ build_master_loan-api:
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker login --username madghost --password 645725f9-7a4d-49d8-9f2a-7d8d18228300
-    - docker build --pull -t $IMAGE_NAME/app .
-    - docker tag $IMAGE_NAME/app $IMAGE_NAME/app:latest
-    - docker push $IMAGE_NAME/app:latest
+    - docker build --pull -t $IMAGE_NAME:latest .
+    - docker push $IMAGE_NAME:latest
   only:
     refs:
       - master
