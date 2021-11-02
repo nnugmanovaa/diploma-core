@@ -25,9 +25,11 @@ import kz.payintech.TotalDebt;
 import kz.payintech.UserOrderList;
 import kz.payintech.siteexchange.SiteExchangePortType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MfoCoreService implements IMfoCoreService {
@@ -53,7 +55,15 @@ public class MfoCoreService implements IMfoCoreService {
     var request = new ResultDataNumberDate();
     request.setNumber(order.getOrderExtRefId());
     request.setDateTime(order.getOrderExtRefTime());
-    return getNewContract(request, order.getLoanEffectiveRate().floatValue());
+
+    log.info(
+        "getNewContract orderId={} iin={} derExtRefId={} loanInterestRate={}",
+        order.getOrderId(),
+        order.getIin(),
+        order.getOrderExtRefId(),
+        order.getLoanInterestRate()
+    );
+    return getNewContract(request, order.getLoanInterestRate().floatValue());
   }
 
   @Override

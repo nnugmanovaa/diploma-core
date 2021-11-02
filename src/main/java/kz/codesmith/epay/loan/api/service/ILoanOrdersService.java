@@ -37,6 +37,7 @@ public interface ILoanOrdersService {
   OrderDto updateLoanOrderStatusAndLoanEffectiveRate(
       Integer orderId,
       OrderState status,
+      BigDecimal loanInterestRate,
       BigDecimal loanEffectiveRate
   );
 
@@ -81,4 +82,6 @@ public interface ILoanOrdersService {
   byte[] getOrderContractDocument(Integer orderId);
 
   byte[] getLoanDebtorFormPdf(Integer orderId);
+
+  void updateLoanOrderIdentityMatchResult(Integer orderId, Double result);
 }

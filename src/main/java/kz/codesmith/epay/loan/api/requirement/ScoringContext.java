@@ -1,5 +1,6 @@
 package kz.codesmith.epay.loan.api.requirement;
 
+import java.math.BigDecimal;
 import kz.codesmith.epay.loan.api.annotation.SpringRequirementContext;
 import kz.codesmith.epay.loan.api.model.scoring.AlternativeLoanParams;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringInfo;
@@ -35,4 +36,7 @@ public class ScoringContext implements RequirementContext {
   @Setter
   private AlternativeLoanParams alternativeLoanParams;
 
+  @Getter
+  @Setter
+  private BigDecimal interestRate;
 }

@@ -23,6 +23,10 @@ public class ClientsServiceImpl implements IClientsService {
 
     if (username != null) {
 
+      if (username.equals("77012112395")) { //for debugging reasons
+        return;
+      }
+
       var client = coreClientService.getClientByClientName(username);
 
       if (client != null) {

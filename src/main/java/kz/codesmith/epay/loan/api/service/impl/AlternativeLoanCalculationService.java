@@ -10,11 +10,14 @@ import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculation;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
+import kz.codesmith.logger.Logged;
 import kz.payintech.ListLoanMethod;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AlternativeLoanCalculationService implements IAlternativeLoanCalculation {
@@ -27,10 +30,8 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
   @Override
   public List<AlternativeChoiceDto> calculateAlternative(ScoringContext context) {
     var loanType = context.getRequestData().getLoanMethod();
-    var loanAmount = BigDecimal.valueOf(context.getRequestData().getLoanAmount());
-    var loanMonthPeriod = context.getRequestData().getLoanPeriod();
     var debt = context.getAlternativeLoanParams().getDebt();
-    var income = context.getAlternativeLoanParams().getDebt();
+    var income = context.getAlternativeLoanParams().getIncome();
     var alternativeAmountStep = context.getVariablesHolder()
         .getValue(ScoringVars.ALT_AMOUNT_STEP, BigDecimal.class);
     var alternativePeriodStep = context.getVariablesHolder()
@@ -42,23 +43,40 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
     var maxLoanPeriod = context.getVariablesHolder()
         .getValue(ScoringVars.MAX_LOAN_PERIOD, Integer.class);
 
+
+    var loanAmount = BigDecimal.valueOf(context.getRequestData().getLoanAmount());
+    var loanMonthPeriod = context.getRequestData().getLoanPeriod();
+
     List<AlternativeChoiceDto> alternatives = new ArrayList<>();
+
+    var newLoanAmount = loanAmount.subtract(alternativeAmountStep)
+        .setScale(2, RoundingMode.HALF_UP);
+    if (newLoanAmount.compareTo(BigDecimal.ZERO) < 1) {
+      return null;
+    }
     var alternativeAmount = calculateAlternativeAmount(
         debt,
         income,
         clientInterestRate,
         creditProduct,
         loanType,
-        loanAmount,
+        newLoanAmount,
         loanMonthPeriod,
         alternativeAmountStep,
         maxGesv
     );
     if (Objects.nonNull(alternativeAmount)) {
+      log.info("Alternative amount calculated ({})", alternativeAmount);
       alternatives.add(AlternativeChoiceDto.builder()
           .loanAmount(alternativeAmount)
+          .loanInterestRate(BigDecimal.valueOf(clientInterestRate))
           .loanMonthPeriod(loanMonthPeriod)
           .build());
+    }
+
+    var newLoanMonthPeriod = loanMonthPeriod + alternativePeriodStep;
+    if (newLoanMonthPeriod > maxLoanPeriod) {
+      return null;
     }
     var alternativePeriod = calculateAlternativePeriod(
         debt,
@@ -67,17 +85,20 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
         creditProduct,
         loanType,
         loanAmount,
-        loanMonthPeriod,
+        newLoanMonthPeriod,
         alternativePeriodStep,
         maxGesv,
         maxLoanPeriod
     );
     if (Objects.nonNull(alternativePeriod)) {
+      log.info("Alternative period calculated ({} months)", alternativePeriod);
       alternatives.add(AlternativeChoiceDto.builder()
           .loanAmount(loanAmount)
+          .loanInterestRate(BigDecimal.valueOf(clientInterestRate))
           .loanMonthPeriod(alternativePeriod)
           .build());
     }
+    log.info("{} alternatives calculated", alternatives.size());
     return alternatives;
   }
 
@@ -92,6 +113,12 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
       BigDecimal alternativeAmountStep,
       Double maxGesv
   ) {
+    log.info("calculateAlternativeAmount("
+        + "debt={}, income={}, clientInterestRate={}, "
+        + "loanAmount={}, loanMonthPeriod={}, alternativeAmountStep={}, maxGesv={})",
+        debt, income, clientInterestRate,
+        loanAmount, loanMonthPeriod, alternativeAmountStep, maxGesv);
+
     var loanSchedule = mfoCoreService.getLoanScheduleCalculation(
         loanAmount,
         loanMonthPeriod,
@@ -109,7 +136,7 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
     if (avrMonthlyPayment.compareTo(maxKdnAvrMonthlyPayment) < 1) {
 
       if (loanSchedule.getEffectiveRate() < maxGesv) {
-        return avrMonthlyPayment;
+        return loanAmount;
       } else {
         return null;
       }
@@ -146,6 +173,12 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
       Double maxGesv,
       Integer maxLoanPeriod
   ) {
+    log.info("calculateAlternativePeriod("
+            + "debt={}, income={}, clientInterestRate={}, "
+            + "loanAmount={}, loanMonthPeriod={}, alternativePeriodStep={}, maxGesv={})",
+        debt, income, clientInterestRate,
+        loanAmount, loanMonthPeriod, alternativePeriodStep, maxGesv);
+
     var loanSchedule = mfoCoreService.getLoanScheduleCalculation(
         loanAmount,
         loanMonthPeriod,

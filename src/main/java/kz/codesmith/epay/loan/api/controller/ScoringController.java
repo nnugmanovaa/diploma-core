@@ -30,6 +30,8 @@ import kz.codesmith.logger.Logged;
 import kz.codesmith.springboot.validators.iin.Iin;
 import kz.payintech.LoanSchedule;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,9 +43,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @Logged
 @RestController
 @RequestMapping("/score")
@@ -66,6 +68,7 @@ public class ScoringController {
   @Value("${scoring.iin.whitelist}")
   private String iinWhiteList;
 
+  @SneakyThrows
   @ApiOperation(
       value = "Start client loan process",
       produces = MediaType.APPLICATION_JSON_VALUE
@@ -102,11 +105,14 @@ public class ScoringController {
         .map(LoanSchedule::getEffectiveRate)
         .map(BigDecimal::valueOf)
         .orElse(null);
+    var loanInterestRate = Optional.ofNullable(context.getInterestRate())
+        .orElse(null);
 
     if (ScoringResult.APPROVED.equals(result.getResult())) {
       order = ordersServices.updateLoanOrderStatusAndLoanEffectiveRate(
           order.getOrderId(),
           OrderState.APPROVED,
+          loanInterestRate,
           loanEffectiveRate
       );
 
@@ -131,59 +137,74 @@ public class ScoringController {
           contract.getNumber(),
           contract.getDateTime()
       );
-
-      return ResponseEntity.ok(ScoringResponse.builder()
+      var resp = ScoringResponse.builder()
           .result(result.getResult())
           .orderId(order.getOrderId())
           .orderTime(order.getInsertedTime())
           .rejectText(result.getErrorsString(","))
           .effectiveRate(order.getLoanEffectiveRate())
-          .build());
+          .build();
+      log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
+      return ResponseEntity.ok(resp);
 
     } else if (ScoringResult.ALTERNATIVE.equals(result.getResult())) {
+      log.info("Scoring Result for orderId={} iin={} is ALTERNATIVE. Going to calc alternatives",
+          order.getOrderId(), order.getIin());
+
       var rejectReason = result.getErrorsString(",");
       order.setLoanEffectiveRate(loanEffectiveRate);
       var alternatives = alternativeLoanCalculation.calculateAlternative(context);
+
       if (Objects.nonNull(alternatives) && !alternatives.isEmpty()) {
+        log.info("{} alternatives calculated", alternatives.size());
         order = ordersServices.rejectLoanOrder(
             order.getOrderId(),
             OrderState.ALTERNATIVE,
             rejectReason
         );
         alternatives = ordersServices.createNewAlternativeLoanOrders(order, alternatives);
-        return ResponseEntity.ok(ScoringResponse.builder()
+        var resp = ScoringResponse.builder()
             .result(result.getResult())
             .orderId(order.getOrderId())
             .orderTime(order.getInsertedTime())
             .rejectText(rejectReason)
             .alternativeChoices(alternatives)
             .effectiveRate(order.getLoanEffectiveRate())
-            .build());
+            .build();
+
+        log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
+        return ResponseEntity.ok(resp);
+
       } else {
         order = ordersServices.rejectLoanOrder(
             order.getOrderId(),
             OrderState.REJECTED,
             rejectReason
         );
-        return ResponseEntity.ok(ScoringResponse.builder()
+        var resp = ScoringResponse.builder()
             .result(ScoringResult.REFUSED)
             .orderId(order.getOrderId())
             .orderTime(order.getInsertedTime())
             .rejectText(rejectReason)
             .effectiveRate(order.getLoanEffectiveRate())
-            .build());
+            .build();
+        log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
+        return ResponseEntity.ok(resp);
       }
 
     } else {
       var rejectReason = result.getErrorsString(",");
       order = ordersServices.rejectLoanOrder(order.getOrderId(), rejectReason);
-      return ResponseEntity.ok(ScoringResponse.builder()
+
+      var resp = ScoringResponse.builder()
           .result(result.getResult())
           .orderId(order.getOrderId())
           .orderTime(order.getInsertedTime())
           .rejectText(rejectReason)
           .effectiveRate(order.getLoanEffectiveRate())
-          .build());
+          .build();
+      log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
+      return ResponseEntity.ok(resp);
     }
   }
 

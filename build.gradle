@@ -346,7 +346,10 @@ dependencies {
     implementation 'org.mockito:mockito-core:3.6.0'
     implementation 'com.amazonaws:aws-java-sdk-s3:1.11.911'
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
-
+    implementation 'io.pebbletemplates:pebble-spring-boot-starter:3.1.5'
+    implementation 'com.openhtmltopdf:openhtmltopdf-core:1.0.6'
+    implementation 'com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.6'
+    implementation 'com.openhtmltopdf:openhtmltopdf-slf4j:1.0.6'
     implementation('co.elastic.apm:apm-agent-attach:1.24.0')
 
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
