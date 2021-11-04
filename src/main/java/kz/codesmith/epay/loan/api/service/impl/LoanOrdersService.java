@@ -70,6 +70,35 @@ public class LoanOrdersService implements ILoanOrdersService {
   private final DocumentGenerator docGenerator;
 
   @Override
+  public Page<OrderDto> getOrdersByUserOwner(LocalDate startDate, LocalDate endDate,
+      Integer orderId, List<OrderState> states, Pageable pageRequest) {
+    var currentUserContext = this.userContext.getContext();
+    switch (currentUserContext.getOwnerType()) {
+      case OPERATOR:
+      case AGENT:
+        return loanOrdersRepository.findAllByInsertedTimeIsBetweenAndState(
+                startDate.atStartOfDay(),
+                endDate.atTime(LocalTime.MAX),
+                orderId,
+                states,
+                pageRequest
+        ).map(o -> mapper.map(o, OrderDto.class));
+      case CLIENT:
+        return loanOrdersRepository.findAllByInsertedTimeIsBetweenAndClientAndState(
+                startDate.atStartOfDay(),
+                endDate.atTime(LocalTime.MAX),
+                currentUserContext.getOwnerId(),
+                orderId,
+                states,
+                pageRequest
+        ).map(o -> mapper.map(o, OrderDto.class));
+      default:
+        return Page.empty();
+    }
+
+  }
+
+  @Override
   public Page<OrderDto> getOrdersByUserOwner(
       LocalDate startDate,
       LocalDate endDate,

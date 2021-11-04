@@ -1,5 +1,7 @@
 package kz.codesmith.epay.loan.api.model.scoring;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import java.time.LocalDate;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -23,9 +25,11 @@ public class DocumentDto {
   private String issuedBy;
 
   @NotBlank
+  @JsonDeserialize(using = LocalDateDeserializer.class)
   private LocalDate issuedDate;
 
   @NotNull
+  @JsonDeserialize(using = LocalDateDeserializer.class)
   private LocalDate expireDate;
 
 }

@@ -1,5 +1,10 @@
 package kz.codesmith.epay.loan.api.model.scoring;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import javax.validation.constraints.NotBlank;
@@ -23,6 +28,7 @@ public class PersonalInfoDto {
   private String middleName;
 
   @NotNull
+  @JsonDeserialize(using = LocalDateDeserializer.class)
   private LocalDate birthDate;
 
   @NotNull

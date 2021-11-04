@@ -4,13 +4,19 @@ import io.swagger.annotations.ApiOperation;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.core.shared.controller.qualifier.ApiPageable;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
+import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
+import kz.codesmith.epay.loan.api.service.IReportExcelService;
 import kz.codesmith.epay.loan.api.service.IReportService;
 import kz.codesmith.logger.Logged;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -38,7 +44,14 @@ import springfox.documentation.annotations.ApiIgnore;
 public class LoanOrdersController {
 
   private final ILoanOrdersService ordersServices;
-  private final IReportService reportService;
+
+  @Qualifier("excelReportService")
+  @Autowired
+  private IReportExcelService excelreportService;
+
+  @Qualifier("csvReportService")
+  @Autowired
+  private IReportService csvreportService;
 
   @PreAuthorize("hasAnyAuthority('MFO_ADMIN', 'ADMIN', 'CLIENT_USER')")
   @ApiPageable
@@ -132,7 +145,7 @@ public class LoanOrdersController {
       @RequestParam(required = false) Integer orderId
   ) {
 
-    byte[] ordersByArray = reportService.getReport(startDate, endDate, orderId);
+    byte[] ordersByArray = csvreportService.getReport(startDate, endDate, orderId);
 
     String filename = "orders_" + startDate.toString() + "_" + endDate.toString() + ".csv";
     ContentDisposition contentDisposition = ContentDisposition.builder("attachment")
@@ -147,4 +160,29 @@ public class LoanOrdersController {
         .body(ordersByArray);
   }
 
+  @ApiOperation(value = "Retrieves orders as excel file basing on logged user")
+  @GetMapping(path = "/excel")
+  public ResponseEntity<byte[]> getOrdersExcel(
+          @RequestParam @NotNull @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
+          @RequestParam @NotNull @DateTimeFormat(iso = ISO.DATE) LocalDate endDate,
+          @RequestParam List<OrderState> states,
+          @RequestParam(required = false) Integer orderId
+  ) {
+
+    byte[] ordersByArr = excelreportService.getReport(startDate, endDate, orderId, states);
+    String filename = String.format("%s_%s.xlsx",
+        startDate.toString(),
+        endDate.toString());
+
+    if (Objects.isNull(ordersByArr)) {
+      return ResponseEntity.notFound().build();
+    } else {
+      return ResponseEntity.ok()
+          .contentType(MediaType.APPLICATION_OCTET_STREAM)
+          .contentLength(ordersByArr.length)
+          .cacheControl(CacheControl.noCache())
+          .header("Content-disposition", "attachment; filename=" + filename)
+          .body(ordersByArr);
+    }
+  }
 }

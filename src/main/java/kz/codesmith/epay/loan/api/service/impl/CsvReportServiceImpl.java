@@ -9,11 +9,12 @@ import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 
 
-@Service
+@Component("csvReportService")
 @RequiredArgsConstructor
 public class CsvReportServiceImpl implements IReportService {
 

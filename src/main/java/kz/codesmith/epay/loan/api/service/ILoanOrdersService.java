@@ -20,6 +20,14 @@ public interface ILoanOrdersService {
       LocalDate startDate,
       LocalDate endDate,
       Integer orderId,
+      List<OrderState> states,
+      Pageable pageRequest
+  );
+
+  Page<OrderDto> getOrdersByUserOwner(
+      LocalDate startDate,
+      LocalDate endDate,
+      Integer orderId,
       Pageable pageRequest
   );
 
