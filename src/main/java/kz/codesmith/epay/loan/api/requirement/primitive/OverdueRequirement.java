@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -70,6 +71,14 @@ public class OverdueRequirement implements Requirement<ScoringContext> {
           overdueAmount
       );
       overduePayments = response.getBody();
+    } catch (HttpClientErrorException e) {
+      if (e.getRawStatusCode() == 404) {
+        log.error("Failed to get Overdue Payments for {}; Due to missing report at PKB", iin);
+        return RequirementResult.failure(RejectionReason.PREVIOUS_OVERDUES_CHECK_FAILED);
+      } else {
+        log.error("Failed to get Overdue Payments for {}; {}", iin, e.getMessage());
+        return RequirementResult.failure(RejectionReason.SCORING_ERRORS);
+      }
     } catch (HttpServerErrorException e) {
       log.error("Failed to get Overdue Payments for {}; {}", iin, e.getMessage());
       return RequirementResult.failure(RejectionReason.SCORING_ERRORS);

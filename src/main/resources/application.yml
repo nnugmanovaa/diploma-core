@@ -55,7 +55,9 @@ management:
 
 logging:
   level:
+    kz.codesmith.epay.loan.api.component.DocumentGenerator: WARN
     kz.codesmith.epay.security.component.JwtAuthorizationFilter: ERROR
+    com.openhtmltopdf: ERROR
 
 integration:
   pkb:
@@ -78,7 +80,7 @@ integration:
     url: ${INTEGRATION_MFS_CORE_URL:https://api-stage.pitech.kz/api}
     username: ${INTEGRATION_MFS_CORE_USERNAME:operator_1000_user}
     password: ${INTEGRATION_MFS_CORE_PASSWORD:q}
-    service-timeout: ${INTEGRATION_MFS_CORE_SERVICE_TIMEOUT:30000}
+    service-timeout: ${INTEGRATION_MFS_CORE_SERVICE_TIMEOUT:240000}
     signin-url: ${INTEGRATION_MFS_CORE_SIGNIN_URL:/auth/signin}
     get-user-url: ${INTEGRATION_MFS_CORE_GET_USER_URL:/admin/users}
     get-client-url: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:/admin/clients/by-clientname}
@@ -130,8 +132,30 @@ s3-storage:
   secret-key: '${S3_SECRET_KEY:9r7D1pDSY9VcUr6zOoBqRfy9VMkIKIk5ekvHU65f}'
   bucket-name: '${S3_BUCKET:mfo-docs-stage}'
 
+retrytemplate:
+  maxAttempts: ${RETRYTEMPLATE_MAX_ATTEMPTS:3}
+  backOffPeriod: ${RETRYTEMPLATE_MAX_ATTEMPTS:3000}
+
 payment-services:
   plannedRePaymentProductId: ${PLANNED_REPAYMENT_PRODUCT_ID:1}
   partialRePaymentProductId: ${PARTIAL_REPAYMENT_PRODUCT_ID:2}
   totalRePaymentProductId: ${TOTAL_REPAYMENT_PRODUCT_ID:3}
 
+app:
+  sms-sender:
+    url: ${SMS_SENDER_URL:https://api.smstraffic.ru/multi.php}
+    username: ${SMS_SENDER_USER:pitech}
+    password: ${SMS_SENDER_PASS:pe9E_3Na}
+    sender: ${SMS_SENDER_ORIGIN:Payintech}
+    msg-tail: ${SMS_SENDER_MSG_TAIL:38uo9CDCtK3}
+    dummy: ${SMS_SENDER_DUMMY:false}
+  phone-verification:
+    dummy-code: ${VERIFICATION_DUMMY:false}
+    dummy-code-value: ${VERIFICATION_DUMMY_CODE:000000}
+    code-length: ${VERIFICATION_CODE_LENGTH:6}
+    wait-period-sec: ${VERIFICATION_WAIT_SEC:60}
+    validity-period-min: ${VERIFICATION_VALID_MIN:30}
+  coid-connector:
+    url: 'http://${COID_CONNECTOR_HOST:coid-connector}:${COID_CONNECTOR_PORT:8080}/api'
+    username: ${COID_CONNECTOR_USER:loan-api-user}
+    password: ${COID_CONNECTOR_PASS:q}

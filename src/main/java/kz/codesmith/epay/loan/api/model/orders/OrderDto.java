@@ -2,10 +2,12 @@ package kz.codesmith.epay.loan.api.model.orders;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import kz.codesmith.epay.core.shared.model.AbstractDto;
+import kz.codesmith.epay.loan.api.util.DecimalToIntSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,6 +42,7 @@ public class OrderDto extends AbstractDto {
 
   private OrderState status;
 
+  @JsonSerialize(using = DecimalToIntSerializer.class)
   private BigDecimal loanAmount;
 
   private Integer loanPeriodMonths;
@@ -47,6 +50,8 @@ public class OrderDto extends AbstractDto {
   private String loanMethod;
 
   private String loanProduct;
+
+  private BigDecimal loanInterestRate;
 
   private BigDecimal loanEffectiveRate;
 

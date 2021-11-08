@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
 import kz.codesmith.epay.core.shared.model.exceptions.IllegalApiUsageGeneralApiException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
+import kz.codesmith.epay.loan.api.component.DocumentGenerator;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.documents.LoanDebtorFormPdfDto;
@@ -39,6 +41,7 @@ import kz.payintech.ListLoanMethod;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.helpers.IOUtils;
 import org.modelmapper.ModelMapper;
@@ -64,6 +67,7 @@ public class LoanOrdersService implements ILoanOrdersService {
   private final IMfoCoreService mfoCoreService;
   private final StorageService storageService;
   private final IDocumentCreatePdf createPdf;
+  private final DocumentGenerator docGenerator;
 
   @Override
   public Page<OrderDto> getOrdersByUserOwner(
@@ -159,8 +163,9 @@ public class LoanOrdersService implements ILoanOrdersService {
     return builder.toString();
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Logged
   @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public List<AlternativeChoiceDto> createNewAlternativeLoanOrders(
       OrderDto order,
       List<AlternativeChoiceDto> alternatives
@@ -173,6 +178,7 @@ public class LoanOrdersService implements ILoanOrdersService {
       orderEntity.setParentOrderId(order.getOrderId());
       orderEntity.setIin(order.getIin());
       orderEntity.setLoanAmount(alternative.getLoanAmount());
+      orderEntity.setLoanInterestRate(alternative.getLoanInterestRate());
       orderEntity.setLoanEffectiveRate(order.getLoanEffectiveRate());
       orderEntity.setLoanMethod(order.getLoanMethod());
       orderEntity.setLoanPeriodMonths(alternative.getLoanMonthPeriod());
@@ -187,13 +193,20 @@ public class LoanOrdersService implements ILoanOrdersService {
       alternative.setOrderId(orderEntity.getOrderId());
       alternative.setOrderTime(orderEntity.getInsertedTime());
 
-      var orderResponse = mfoCoreService.getNewOrder(order);
+      var newOrder = SerializationUtils.clone(order);
+      newOrder.setLoanAmount(alternative.getLoanAmount());
+      newOrder.setLoanPeriodMonths(alternative.getLoanMonthPeriod());
+
+      var orderResponse = mfoCoreService.getNewOrder(newOrder);
       orderEntity.setOrderExtRefId(orderResponse.getNumber());
       orderEntity.setOrderExtRefTime(orderResponse.getDateTime());
 
-      var contract = mfoCoreService.getNewContract(order);
-      var key = order.getIin() + "/contract-" + order.getOrderId() + "-"
-          + order.getOrderExtRefId() + "-" + order.getOrderExtRefTime() + ".pdf";
+      newOrder.setLoanInterestRate(alternative.getLoanInterestRate());
+      newOrder.setOrderExtRefId(orderResponse.getNumber());
+      newOrder.setOrderExtRefTime(orderResponse.getDateTime());
+      var contract = mfoCoreService.getNewContract(newOrder);
+      var key = newOrder.getIin() + "/contract-" + newOrder.getOrderId() + "-"
+          + newOrder.getOrderExtRefId() + "-" + newOrder.getOrderExtRefTime() + ".pdf";
       storageService.put(
           key,
           new ByteArrayInputStream(Base64.decodeBase64(contract.getContract())),
@@ -221,11 +234,13 @@ public class LoanOrdersService implements ILoanOrdersService {
   public OrderDto updateLoanOrderStatusAndLoanEffectiveRate(
       Integer orderId,
       OrderState status,
+      BigDecimal interestRate,
       BigDecimal loanEffectiveRate
   ) {
     var order = getOrder(orderId);
     order.setStatus(status);
     order.setLoanEffectiveRate(loanEffectiveRate);
+    order.setLoanInterestRate(interestRate);
     return mapper.map(order, OrderDto.class);
   }
 
@@ -303,6 +318,12 @@ public class LoanOrdersService implements ILoanOrdersService {
         })
     );
     order.setStatus(status);
+
+    if (OrderState.CASHED_OUT_CARD.equals(status) || OrderState.CASHED_OUT_WALLET.equals(status)) {
+      var entity = getOrder(orderId);
+      var orderDto = mapper.map(entity, OrderDto.class);
+      mfoCoreService.sendBorrowerSignature(orderDto);
+    }
     return mapper.map(order, OrderDto.class);
   }
 
@@ -311,7 +332,6 @@ public class LoanOrdersService implements ILoanOrdersService {
   public OrderDto approveOrder(Integer orderId) {
     var order = getOrderByUserOwner(orderId);
     if (OrderState.APPROVED.equals(order.getStatus())) {
-      mfoCoreService.sendBorrowerSignature(order);
       return updateLoanOrderStatus(orderId, OrderState.CONFIRMED);
     } else {
       throw new MfoGeneralApiException("Incorrect state " + order.getStatus());
@@ -368,9 +388,68 @@ public class LoanOrdersService implements ILoanOrdersService {
   }
 
   @Override
+  @SneakyThrows
   public byte[] getLoanDebtorFormPdf(Integer orderId) {
     OrderEntity order = getOrder(orderId);
-    return createPdf.createLoanDebtorFormPdf(mapOrderEntityToLoanDebtFormDto(order));
+    return docGenerator.generatePdf("loan-application", mapOrderEntity(order));
+  }
+
+  @Override
+  public void updateLoanOrderIdentityMatchResult(Integer orderId, Double result) {
+    OrderEntity order = getOrder(orderId);
+    order.setFaceMatching(result);
+    loanOrdersRepository.save(order);
+  }
+
+  private Map<String, Object> mapOrderEntity(OrderEntity order) {
+    var valuesMap = new HashMap<String, Object>();
+    var dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    var personalInfoMap = order.getPersonalInfo();
+
+    var date = order.getInsertedTime();
+    valuesMap.put("date", dateFormatter.format(date));
+    valuesMap.put("name", order.getClientInfo());
+    valuesMap.put("loanPurpose", "Нецелевое/ Мақсатты емес");
+    valuesMap.put("loanSecurity", "Без обеспечения (беззалоговый)/ Кепілдіксіз");
+    valuesMap.put("amount", order.getLoanAmount());
+    valuesMap.put("period", order.getLoanPeriodMonths());
+    valuesMap.put("overpaymentAmount", "");
+    valuesMap.put("fee", "");
+    var method = Objects.equals(
+        order.getLoanMethod(), ListLoanMethod.ANNUITY_PAYMENTS.name())
+        ? "аннуитетный / аннуитетті"
+        : "дифференцированный / сараланған";
+    valuesMap.put("method", method);
+
+    valuesMap.put("iin", order.getIin());
+    var birtDate = LocalDate.parse(personalInfoMap.get("birthDate").toString());
+    valuesMap.put("birthDate", dateFormatter.format(birtDate));
+    valuesMap.put("gender", personalInfoMap.get("gender"));
+    var document = (Map<String, String>) personalInfoMap.get("nationalIdDocument");
+    valuesMap.put("docNum", document.get("idNumber"));
+    valuesMap.put("docDate", dateFormatter.format(LocalDate.parse(document.get("issuedDate"))));
+    valuesMap.put("docExpire", dateFormatter.format(LocalDate.parse(document.get("expireDate"))));
+    valuesMap.put("docIssuer", document.get("issuedBy"));
+    valuesMap.put("maritalStatus", personalInfoMap.get("maritalStatus"));
+    valuesMap.put("children", personalInfoMap.get("numberOfKids"));
+    valuesMap.put("education", personalInfoMap.get("education"));
+    valuesMap.put("workPlace", personalInfoMap.get("employer"));
+    valuesMap.put("jobPosition", personalInfoMap.get("workPosition"));
+    valuesMap.put("foreignOfficial", "");
+    valuesMap.put("monthlyIncome", personalInfoMap.get("monthlyIncome"));
+    valuesMap.put("additionalIncome", personalInfoMap.get("additionalMonthlyIncome"));
+    valuesMap.put("msisdn", order.getMsisdn());
+    valuesMap.put("additionalContacts", "");
+    var addressMap = (Map<String, String>) personalInfoMap.get("registrationAddress");
+    var address = addressMap.get("city") + "\n"
+        + addressMap.get("district") + "\n"
+        + addressMap.get("street") + "\n"
+        + addressMap.get("house") + "\n"
+        + addressMap.get("apartment");
+    valuesMap.put("registrationAddress", address);
+    valuesMap.put("card", "");
+
+    return valuesMap;
   }
 
   private LoanDebtorFormPdfDto mapOrderEntityToLoanDebtFormDto(OrderEntity entity) {

@@ -53,7 +53,8 @@ public class ScoreAndBadRateRequirement implements Requirement<ScoringContext> {
         RequirementResult behvResult = callBehaviorScoring(context, iin);
 
         if (behvResult == null) {
-          throw new ScoringUnreachableException();
+          log.info("FICO and Behavior Scores are both null for {}", iin);
+          return RequirementResult.failure(RejectionReason.BAD_SCORE_OR_RATE);
         } else if (behvResult.isSuccessful()) {
           return RequirementResult.success();
         } else {
@@ -74,7 +75,8 @@ public class ScoreAndBadRateRequirement implements Requirement<ScoringContext> {
         RequirementResult ficoResult = callFicoScoring(context, iin);
 
         if (ficoResult == null) {
-          throw new ScoringUnreachableException();
+          log.info("FICO and Behavior Scores are both null for {}", iin);
+          return RequirementResult.failure(RejectionReason.BAD_SCORE_OR_RATE);
         } else if (ficoResult.isSuccessful()) {
           return RequirementResult.success();
         } else {

@@ -101,6 +101,9 @@ public class OrderEntity {
   @Column(name = "loan_effective_rate")
   private BigDecimal loanEffectiveRate;
 
+  @Column(name = "loan_interest_rate")
+  private BigDecimal loanInterestRate;
+
   @Column(name = "closed_time")
   private LocalDateTime closedTime;
 
@@ -137,6 +140,9 @@ public class OrderEntity {
 
   @Column(name = "pre_score_request_id")
   private String preScoreRequestId;
+
+  @Column(name = "face_matching")
+  private Double faceMatching;
 
   @Column(name = "scoring_info")
   @Type(type = "JsonMapDataType")

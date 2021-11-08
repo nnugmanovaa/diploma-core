@@ -5,6 +5,9 @@ import kz.codesmith.epay.ws.connector.configuration.soap.WsStubs;
 import kz.payintech.siteexchange.SiteExchange;
 import kz.payintech.siteexchange.SiteExchangePortType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cxf.frontend.ClientProxy;
+import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transports.http.configuration.ConnectionType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +43,9 @@ public class MfoCoreClientProducer extends AbstractClientProducer {
         mfoCoreProperties.getPassword()
     );
     setTimeout(proxy, mfoCoreProperties.getServiceTimeout());
+
+    var httpConduit = (HTTPConduit)ClientProxy.getClient(proxy).getConduit();
+    httpConduit.getClient().setConnection(ConnectionType.KEEP_ALIVE);
     return setupJavaProxies(SiteExchangePortType.class, proxy);
   }
 

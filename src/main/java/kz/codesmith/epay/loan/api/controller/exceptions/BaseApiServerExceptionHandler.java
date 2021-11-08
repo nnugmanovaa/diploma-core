@@ -8,6 +8,11 @@ import kz.codesmith.epay.core.shared.model.errors.ApiError;
 import kz.codesmith.epay.core.shared.model.errors.SimpleApiError;
 import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
+import kz.codesmith.epay.loan.api.exception.TooEarlyForRequestException;
+import kz.codesmith.epay.loan.api.exception.VerificationCodeExpiredException;
+import kz.codesmith.epay.loan.api.exception.VerificationException;
+import kz.codesmith.epay.loan.api.exception.VerificationRequestNotFoundException;
+import kz.codesmith.epay.loan.api.exception.WrongVerificationCodeException;
 import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.logger.request.XrequestId;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +64,7 @@ public class BaseApiServerExceptionHandler extends ResponseEntityExceptionHandle
   public ResponseEntity<Object> handleGeneralApiServerError(GeneralApiServerException ex,
       WebRequest request) {
 
-    String message = ex.getErrorType().toString();
+    String message = "Произошла ошибка, попробуйте еще раз";
 
     final List<Object> parameters = new ArrayList<>();
 
@@ -120,6 +125,18 @@ public class BaseApiServerExceptionHandler extends ResponseEntityExceptionHandle
         .build();
 
     return handleExceptionInternal(ex, apiError, new HttpHeaders(), apiError.getStatus(), request);
+  }
+
+  @ExceptionHandler(VerificationException.class)
+  public ResponseEntity<ApiError> handleVerificationErrors(
+      VerificationException exc) {
+    var errorResponse = ApiError.builder()
+        .requestId(requestId.get())
+        .status(exc.getStatus())
+        .code(exc.getErrorCode())
+        .message(exc.getMessage())
+        .build();
+    return new ResponseEntity<>(errorResponse, exc.getStatus());
   }
 
   @Override

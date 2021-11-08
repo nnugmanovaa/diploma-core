@@ -74,6 +74,7 @@ public class PkbScoreService implements IPkbScoreService {
     return wsPkbFicoService.getScore(cigHeader, iin);
   }
 
+  @Logged
   @SneakyThrows
   @Cacheable(value = RedisCacheConfig.PKB_CACHE_NAME, unless = "#result == null")
   @Override

@@ -24,11 +24,10 @@ public class EffectiveRateRequirement implements Requirement<ScoringContext> {
   @SneakyThrows
   public RequirementResult check(ScoringContext context) {
     var requestData = context.getRequestData();
-    var minRate = context.getVariablesHolder().getValue(ScoringVars.MIN_RATE, Double.class);
-    var maxGesv = context.getVariablesHolder().getValue(ScoringVars.MAX_GESV, Double.class);
-    var loanInterestRate = (float) (minRate + context.getScoringInfo().getBadRate());
     var iin = requestData.getIin();
     var isWhitelist = context.getRequestData().isWhiteList();
+    var minRate = context.getVariablesHolder().getValue(ScoringVars.MIN_RATE, Double.class);
+    var loanInterestRate = (float) (minRate + context.getScoringInfo().getBadRate());
 
     LoanSchedule loanSchedule = mfoCoreService.getLoanScheduleCalculation(
         BigDecimal.valueOf(requestData.getLoanAmount()),
@@ -38,11 +37,14 @@ public class EffectiveRateRequirement implements Requirement<ScoringContext> {
         requestData.getLoanMethod());
 
     context.setLoanSchedule(loanSchedule);
+    context.setInterestRate(BigDecimal.valueOf(loanInterestRate));
 
     if (isWhitelist) {
       log.info("IIN in whitelist {}, no scoring", iin);
       return RequirementResult.success();
     }
+
+    var maxGesv = context.getVariablesHolder().getValue(ScoringVars.MAX_GESV, Double.class);
 
     log.info(
         "Effective Rate Check [loanEffectiveRate={} maxGesv={}]",
