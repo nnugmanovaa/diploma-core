@@ -15,6 +15,8 @@ public class LoanPaymentConstants {
   public static final String MESSAGE_DEFAULT_EXCEPTION = "an exception occurred";
   public static final String MESSAGE_PAYMENT_ALREADY_PROCESSED = "Payment was already processed";
   public static final String MESSAGE_BAD_STATUS_RESPONSE = "Bad status response";
+  public static final String MESSAGE_IIN_MUST_BE_THE_SAME =
+      "ИИН запроса должен совпадать с ИИН клиента";
 
   public static final String COULD_NOT_CREATE_REQUEST = "Could not create payment request";
   public static final String LOAN_PAYMENT_INIT_DESCRIPTION = "Платёж по займу";
