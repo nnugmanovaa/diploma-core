@@ -5,6 +5,8 @@ import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorType;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
 import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
+import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
+import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.service.IClientsService;
 import kz.codesmith.epay.security.model.UserContextHolder;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +34,7 @@ public class ClientsServiceImpl implements IClientsService {
       if (client != null) {
 
         if (!Objects.equals(iin, client.getIin())) {
-          throw new IllegalStateException("Scoring request IIN should be the same as client's IIN");
+          throw new MfoGeneralApiException(LoanPaymentConstants.MESSAGE_IIN_MUST_BE_THE_SAME);
         }
 
       } else {
