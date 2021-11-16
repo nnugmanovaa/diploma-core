@@ -50,8 +50,8 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
   Page<OrderEntity> findAllByInsertedTimeIsBetweenAndClient(
       @Param("startTime") LocalDateTime startTime,
       @Param("endTime") LocalDateTime endTime,
-      @Param("orderId") Integer orderId,
       @Param("clientId") Integer clientId,
+      @Param("orderId") Integer orderId,
       Pageable pageRequest
   );
 
@@ -70,22 +70,18 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
       Pageable pageRequest
   );
 
-
   List<OrderEntity> findAllByInsertedTimeIsBetweenAndOrderIdAndClientId(
-      @Param("startTime") LocalDateTime startTime,
-      @Param("endTime") LocalDateTime endTime,
-      @Param("orderId") Integer orderId,
-      @Param("clientId") Integer clientId
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      Integer orderId,
+      Integer clientId
   );
 
   List<OrderEntity> findAllByInsertedTimeIsBetweenAndOrderId(
-      @Param("startTime") LocalDateTime startTime,
-      @Param("endTime") LocalDateTime endTime,
-      @Param("orderId") Integer orderId
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      Integer orderId
   );
 
-  List<OrderEntity> findAllByParentOrderIdAndClientId(
-      @Param("parentId") Integer parentId,
-      @Param("clientId") Integer clientId
-  );
+  List<OrderEntity> findAllByParentOrderIdAndClientId(Integer parentId, Integer clientId);
 }
