@@ -25,8 +25,8 @@ import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.OrderInitDto;
 import kz.codesmith.epay.loan.api.repository.PaymentRepository;
-import kz.codesmith.epay.loan.api.service.IAcquiringMessageService;
 import kz.codesmith.epay.loan.api.service.IAcquiringService;
+import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class AcquiringService implements IAcquiringService {
 
   private final PaymentRepository paymentRepository;
   private final AcquiringProperties acquiringProperties;
-  private final IAcquiringMessageService acquiringMessageService;
+  private final IMessageService acquiringMessageService;
   private final IPaymentService paymentService;
   private final AcquiringRs acquiringRs;
   private final ObjectMapper objectMapper;
@@ -162,7 +162,7 @@ public class AcquiringService implements IAcquiringService {
 
         if (paymentStatusResponse.getStatus() == AcquiringBaseStatus.SUCCESS) {
           acquiringMessageService
-              .firePayOneC(modelMapper.map(paymentEntity, LoanPaymentRequestDto.class),
+              .firePayEvent(modelMapper.map(paymentEntity, LoanPaymentRequestDto.class),
                   AmqpConfig.PAYMENT_SEND_ROUTING_KEY);
 
           outNotificationResponse.setStatus(AcquiringBaseStatus.SUCCESS);

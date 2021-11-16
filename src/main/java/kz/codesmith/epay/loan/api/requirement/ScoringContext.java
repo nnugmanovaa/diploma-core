@@ -39,4 +39,8 @@ public class ScoringContext implements RequirementContext {
   @Getter
   @Setter
   private BigDecimal interestRate;
+
+  @Getter
+  @Setter
+  private BigDecimal maxLoanAmount;
 }

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import kz.codesmith.logger.Logged;
 import kz.payintech.ListLoanMethod;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +56,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LoanOrdersService implements ILoanOrdersService {
@@ -210,6 +213,11 @@ public class LoanOrdersService implements ILoanOrdersService {
       orderEntity.setLoanInterestRate(alternative.getLoanInterestRate());
       orderEntity.setLoanEffectiveRate(order.getLoanEffectiveRate());
       orderEntity.setLoanMethod(order.getLoanMethod());
+      orderEntity.setScoringInfo(objectMapper.convertValue(
+          order.getScoringInfo(),
+          new TypeReference<>() {
+          })
+      );
       orderEntity.setLoanPeriodMonths(alternative.getLoanMonthPeriod());
       orderEntity
           .setLoanProduct(order.getLoanMethod().equals(ListLoanMethod.ANNUITY_PAYMENTS.name())
@@ -234,6 +242,9 @@ public class LoanOrdersService implements ILoanOrdersService {
       newOrder.setOrderExtRefId(orderResponse.getNumber());
       newOrder.setOrderExtRefTime(orderResponse.getDateTime());
       var contract = mfoCoreService.getNewContract(newOrder);
+      log.info("client {} new contract number for alternative is, {}", order.getIin(),
+          contract.getNumber());
+      orderEntity.setContractExtRefId(contract.getNumber());
       var key = newOrder.getIin() + "/contract-" + newOrder.getOrderId() + "-"
           + newOrder.getOrderExtRefId() + "-" + newOrder.getOrderExtRefTime() + ".pdf";
       storageService.put(
@@ -243,8 +254,6 @@ public class LoanOrdersService implements ILoanOrdersService {
       );
       orderEntity.setContractDocumentS3Key(key);
       orderEntity.setContractExtRefTime(contract.getDateTime());
-      orderEntity.setContractExtRefId(contract.getNumber());
-
     });
 
     return alternatives;
@@ -428,6 +437,45 @@ public class LoanOrdersService implements ILoanOrdersService {
     OrderEntity order = getOrder(orderId);
     order.setFaceMatching(result);
     loanOrdersRepository.save(order);
+  }
+
+  @Override
+  public List<OrderDto> findAllOpenLoansByIin(String clientIin) {
+    List<OrderState> states = Arrays
+        .asList(OrderState.CASHED_OUT_WALLET, OrderState.CASHED_OUT_CARD);
+    return loanOrdersRepository
+        .findAllByIinAndStatusIn(clientIin, states)
+        .stream()
+        .map(o -> mapper.map(o, OrderDto.class))
+        .collect(Collectors.toList());
+  }
+
+  @Logged
+  @Transactional(isolation = Isolation.SERIALIZABLE)
+  @Override
+  public OrderDto updateScoringInfoAndEffectiveRateValues(Integer orderId, ScoringInfo scoringInfo,
+      BigDecimal loanEffectiveRate) {
+    var order = getOrder(orderId);
+    order.setScoringInfo(objectMapper.convertValue(
+        scoringInfo,
+        new TypeReference<>() {
+        })
+    );
+    order.setLoanEffectiveRate(loanEffectiveRate);
+    loanOrdersRepository.save(order);
+    return mapper.map(order, OrderDto.class);
+  }
+
+  @Logged
+  @Transactional(isolation = Isolation.SERIALIZABLE)
+  @Override
+  public OrderDto updateEffectiveRateAndInterestRateValues(Integer orderId, Float loanEffectiveRate,
+      Float interestRate) {
+    var order = getOrder(orderId);
+    order.setLoanEffectiveRate(BigDecimal.valueOf(loanEffectiveRate));
+    order.setLoanInterestRate(BigDecimal.valueOf(interestRate));
+    loanOrdersRepository.save(order);
+    return mapper.map(order, OrderDto.class);
   }
 
   private Map<String, Object> mapOrderEntity(OrderEntity order) {

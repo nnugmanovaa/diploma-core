@@ -84,4 +84,6 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
   );
 
   List<OrderEntity> findAllByParentOrderIdAndClientId(Integer parentId, Integer clientId);
+
+  List<OrderEntity> findAllByIinAndStatusIn(String iin, List<OrderState> states);
 }

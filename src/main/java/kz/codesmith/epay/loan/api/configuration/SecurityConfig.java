@@ -51,7 +51,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
   }
 
   @Configuration
-  @Order(2)
+  @Order(3)
   @RequiredArgsConstructor
   public static class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -109,4 +109,22 @@ class SecurityConfig extends BaseSecurityConfiguration {
 
   }
 
+  @Configuration
+  @Order(2)
+  @RequiredArgsConstructor
+  public static class SwaggerSecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http.cors().and().csrf().disable()
+          .requestMatchers()
+          .antMatchers(
+              "/ws/**"
+          ).and()
+          .authorizeRequests()
+          .anyRequest()
+          .hasAuthority("AGENT_USER")
+          .and()
+          .httpBasic();
+    }
+  }
 }

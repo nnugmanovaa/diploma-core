@@ -13,9 +13,11 @@ import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import kz.codesmith.epay.core.shared.model.exceptions.LoanPaymentException;
+import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
 import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringBaseStatus;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringPaymentResponse;
+import kz.codesmith.epay.loan.api.model.acquiring.MfoProcessingStatus;
 import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountResponse;
 import kz.codesmith.epay.loan.api.payment.dto.LoanInfoDto;
@@ -23,7 +25,9 @@ import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
 import kz.codesmith.epay.loan.api.payment.dto.OrderInitDto;
 import kz.codesmith.epay.loan.api.payment.services.LoanPaymentServices;
+import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.service.IAcquiringService;
+import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.pitech.mfo.Contract;
 import kz.pitech.mfo.PaymentApp;
@@ -45,6 +49,7 @@ public class LoanPaymentImpl implements ILoanPayment {
   private final MfoAppProperties mfoAppProperties;
   private final IAcquiringService acquiringService;
   private final ModelMapper modelMapper;
+  private final IMessageService messageService;
 
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -140,9 +145,21 @@ public class LoanPaymentImpl implements ILoanPayment {
   @Override
   public LoanPaymentResponseDto retryPayment(Integer paymentId) {
     PaymentEntity paymentEntity = paymentService.getPayment(paymentId);
-    LoanPaymentRequestDto paymentDto = modelMapper.map(paymentEntity, LoanPaymentRequestDto.class);
+    if (paymentEntity.getMfoProcessingStatus().equals(MfoProcessingStatus.PROCESSED)) {
+      return LoanPaymentResponseDto.builder()
+          .message("Платеж принят.")
+          .status(LoanPaymentStatus.SUCCESS)
+          .paymentId(paymentId)
+          .paymentTime(LocalDateTime.now())
+          .build();
+    }
+    LoanPaymentRequestDto paymentDto = modelMapper
+        .map(paymentEntity, LoanPaymentRequestDto.class);
     LoanPaymentResponseDto paymentResponse = processPayment(paymentDto);
     paymentService.updateProcessingInfo(paymentId, paymentResponse);
+
+    messageService.fireLoanStatusGetEvent(paymentDto.getClientRef(),
+        AmqpConfig.LOAN_STATUSES_ROUTING_KEY);
 
     return paymentResponse;
   }

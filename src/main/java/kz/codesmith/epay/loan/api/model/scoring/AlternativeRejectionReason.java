@@ -3,7 +3,8 @@ package kz.codesmith.epay.loan.api.model.scoring;
 import org.apache.commons.lang3.StringUtils;
 
 public enum AlternativeRejectionReason implements Reason {
-  NEW_KDN_TOO_BIG("new kdn is bigger than expected“");
+  NEW_KDN_TOO_BIG("new kdn is bigger than expected“"),
+  KDN_TOO_BIG_SUGGEST_ALTERNATIVE("kdn too big, alternative suggested");
 
   private final String description;
 

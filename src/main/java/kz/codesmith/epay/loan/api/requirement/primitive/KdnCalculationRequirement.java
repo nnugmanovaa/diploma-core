@@ -12,10 +12,12 @@ import kz.codesmith.epay.loan.api.model.pkb.kdn.KdnRequest;
 import kz.codesmith.epay.loan.api.model.scoring.AlternativeLoanParams;
 import kz.codesmith.epay.loan.api.model.scoring.AlternativeRejectionReason;
 import kz.codesmith.epay.loan.api.model.scoring.RejectionReason;
+import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.Requirement;
 import kz.codesmith.epay.loan.api.requirement.RequirementResult;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
+import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -34,6 +36,7 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
 
   private final PkbConnectorProperties pkbConnectorProps;
   private final RestTemplate restTemplate;
+  private final IScoreVariablesService scoreVarsService;
 
   @Value("${scoring.max-kdn}")
   private double maxKdn;
@@ -43,28 +46,51 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
     var requestData = context.getRequestData();
     var iin = requestData.getIin();
     var isWhitelist = context.getRequestData().isWhiteList();
-
+    var isBlackList = context.getRequestData().isBlackList();
+    var minScoreBall = scoreVarsService.getValue(ScoringVars.MIN_SCORE_BALL, Integer.class);
     if (isWhitelist) {
       log.info("IIN in whitelist {}, no scoring", iin);
       return RequirementResult.success();
     }
-
-    var report = getKdnScore(
-        requestData.getIin(),
-        requestData.getPersonalInfo().getBirthDate(),
-        requestData.getPersonalInfo().getFirstName(),
-        requestData.getPersonalInfo().getLastName(),
-        requestData.getPersonalInfo().getMiddleName()
-    );
+    ApplicationReport report;
+    if (isBlackList) {
+      report = getFakeKdnReportData(requestData.getIin());
+    } else {
+      report = getKdnScore(
+          requestData.getIin(),
+          requestData.getPersonalInfo().getBirthDate(),
+          requestData.getPersonalInfo().getFirstName(),
+          requestData.getPersonalInfo().getLastName(),
+          requestData.getPersonalInfo().getMiddleName()
+      );
+    }
 
     if (report.getKdnScore() == null || report.getDebt() == null || report.getIncome() == null) {
       return RequirementResult.failure(RejectionReason.KDN_INCOME_OR_DEBT_UNAVAILABLE);
     }
 
+    log.info("KDN score result income:{}, kdn ={}, debt={}", report.getIncome(),
+        report.getKdnScore(),
+        report.getDebt());
+
+
     var kdnScore = report.getKdnScore();
     log.info("PKB KDN is {}", kdnScore);
     if (kdnScore >= maxKdn) {
-      log.info("(kdnScore >= maxKdn) {} >= {}. return RejectionReason.KDN_TOO_BIG");
+      log.info("(kdnScore >= maxKdn) {} >= {}. check for alternative",
+          kdnScore, maxKdn);
+      Integer userScore = context.getScoringInfo().getScore();
+      if (userScore > minScoreBall) {
+        Double loanAmount = context.getRequestData().getLoanAmount();
+        Double costOfLiving = context.getVariablesHolder()
+            .getValue(ScoringVars.COST_OF_LIVING, Double.class);
+        if (loanAmount > costOfLiving) {
+          context.setMaxLoanAmount(BigDecimal.valueOf(costOfLiving));
+          return RequirementResult
+              .failure(AlternativeRejectionReason.KDN_TOO_BIG_SUGGEST_ALTERNATIVE);
+        }
+        return RequirementResult.success();
+      }
       return RequirementResult.failure(RejectionReason.KDN_TOO_BIG);
     }
 
@@ -145,5 +171,14 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
         set("Authorization", authHeader);
       }
     };
+  }
+
+  private ApplicationReport getFakeKdnReportData(String iin) {
+    ApplicationReport report = new ApplicationReport();
+    report.setDebt(0d);
+    report.setIncome(200000d);
+    report.setIin(iin);
+    report.setKdnScore(4.5);
+    return report;
   }
 }

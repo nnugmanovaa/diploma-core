@@ -1,27 +1,33 @@
 package kz.codesmith.epay.loan.api.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiOperation;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.model.pkb.KdnScoreRequestDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringRequest;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResponse;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
+import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.requirement.ScoringRequirement;
-import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculation;
+import kz.codesmith.epay.loan.api.requirement.ScoringRequirementResult;
+import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
 import kz.codesmith.epay.loan.api.service.IClientsService;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
+import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
 import kz.codesmith.epay.loan.api.service.StorageService;
 import kz.codesmith.epay.loan.api.service.VariablesHolder;
 import kz.codesmith.epay.loan.api.service.impl.LoanService;
@@ -33,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.cxf.common.util.CollectionUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -57,16 +64,20 @@ public class ScoringController {
   private final ScoringRequirement requirement;
   private final ScoringContext context;
   private final IPkbScoreService pkbScoreService;
-  private final IAlternativeLoanCalculation alternativeLoanCalculation;
+  private final IAlternativeLoanCalculationService alternativeLoanCalculation;
   private final IMfoCoreService mfoCoreService;
   private final ILoanOrdersService ordersServices;
   private final StorageService storageService;
   private final ScoringVarsService scoringVarsService;
   private final ObjectMapper objectMapper;
   private final IClientsService clientsService;
+  private final IScoreVariablesService scoreVarService;
 
   @Value("${scoring.iin.whitelist}")
   private String iinWhiteList;
+
+  @Value("${scoring.iin.backlist}")
+  private String iinBlackList;
 
   @SneakyThrows
   @ApiOperation(
@@ -93,6 +104,9 @@ public class ScoringController {
     );
     context.setRequestData(request);
     request.setWhiteList(Stream.of(iinWhiteList.split(","))
+        .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
+
+    request.setBlackList(Stream.of(iinBlackList.split(","))
         .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
     var result = requirement.check(context);
 
@@ -151,6 +165,15 @@ public class ScoringController {
       log.info("Scoring Result for orderId={} iin={} is ALTERNATIVE. Going to calc alternatives",
           order.getOrderId(), order.getIin());
 
+      Double costOfLiving = scoreVarService.getValue(ScoringVars.COST_OF_LIVING, Double.class);
+
+      if (Objects.nonNull(context.getMaxLoanAmount())
+          && context.getMaxLoanAmount()
+          .equals(BigDecimal.valueOf(costOfLiving))) {
+        log.info("Minimal alternative suggested {}, for client={}", costOfLiving, request.getIin());
+        return returnMinAlternative(order, result, costOfLiving, loanEffectiveRate);
+      }
+
       var rejectReason = result.getErrorsString(",");
       order.setLoanEffectiveRate(loanEffectiveRate);
       var alternatives = alternativeLoanCalculation.calculateAlternative(context);
@@ -176,22 +199,8 @@ public class ScoringController {
         return ResponseEntity.ok(resp);
 
       } else {
-        order = ordersServices.rejectLoanOrder(
-            order.getOrderId(),
-            OrderState.REJECTED,
-            rejectReason
-        );
-        var resp = ScoringResponse.builder()
-            .result(ScoringResult.REFUSED)
-            .orderId(order.getOrderId())
-            .orderTime(order.getInsertedTime())
-            .rejectText(rejectReason)
-            .effectiveRate(order.getLoanEffectiveRate())
-            .build();
-        log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
-        return ResponseEntity.ok(resp);
+        return getRejectOrderResponse(order, rejectReason);
       }
-
     } else {
       var rejectReason = result.getErrorsString(",");
       order = ordersServices.rejectLoanOrder(order.getOrderId(), rejectReason);
@@ -206,6 +215,76 @@ public class ScoringController {
       log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
       return ResponseEntity.ok(resp);
     }
+  }
+
+  private ResponseEntity<ScoringResponse> returnMinAlternative(OrderDto order,
+      ScoringRequirementResult result, Double costOfLiving, BigDecimal loanEffectiveRate)
+      throws JsonProcessingException {
+
+    var rejectReason = result.getErrorsString(",");
+    order = ordersServices.rejectLoanOrder(
+        order.getOrderId(),
+        OrderState.ALTERNATIVE,
+        rejectReason
+    );
+
+    var orderResponse = mfoCoreService.getNewOrder(order);
+    order = ordersServices.updateLoanOrderExtRefs(
+        order.getOrderId(),
+        orderResponse.getNumber(),
+        orderResponse.getDateTime()
+    );
+
+    order = ordersServices.updateScoringInfoAndEffectiveRateValues(
+        order.getOrderId(),
+        context.getScoringInfo(),
+        loanEffectiveRate
+    );
+
+    List<AlternativeChoiceDto> alternatives = alternativeLoanCalculation.calculateAlternative(
+        BigDecimal.valueOf(costOfLiving),
+        scoreVarService.getValue(ScoringVars.MIN_LOAN_PERIOD, Integer.class),
+        context.getInterestRate().floatValue(),
+        context.getRequestData().getLoanProduct(),
+        context.getRequestData().getLoanMethod(),
+        scoreVarService.getValue(ScoringVars.MAX_GESV, Double.class),
+        order.getOrderId()
+    );
+
+    if (!CollectionUtils.isEmpty(alternatives)) {
+      alternatives = ordersServices.createNewAlternativeLoanOrders(order, alternatives);
+      var resp = ScoringResponse.builder()
+          .result(result.getResult())
+          .orderId(order.getOrderId())
+          .orderTime(order.getInsertedTime())
+          .rejectText(rejectReason)
+          .alternativeChoices(alternatives)
+          .effectiveRate(order.getLoanEffectiveRate())
+          .build();
+
+      log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
+      return ResponseEntity.ok(resp);
+    } else {
+      return getRejectOrderResponse(order, rejectReason);
+    }
+  }
+
+  private ResponseEntity<ScoringResponse> getRejectOrderResponse(OrderDto order,
+      String rejectReason) throws JsonProcessingException {
+    order = ordersServices.rejectLoanOrder(
+        order.getOrderId(),
+        OrderState.REJECTED,
+        rejectReason
+    );
+    var resp = ScoringResponse.builder()
+        .result(ScoringResult.REFUSED)
+        .orderId(order.getOrderId())
+        .orderTime(order.getInsertedTime())
+        .rejectText(rejectReason)
+        .effectiveRate(order.getLoanEffectiveRate())
+        .build();
+    log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
+    return ResponseEntity.ok(resp);
   }
 
   @PreAuthorize("hasAnyAuthority('CLIENT_USER')")

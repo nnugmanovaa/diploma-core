@@ -41,4 +41,7 @@ public class ScoringRequest {
   private boolean isWhiteList = false;
 
   private String preScoreRequestId;
+
+  @JsonIgnore
+  private boolean isBlackList = false;
 }

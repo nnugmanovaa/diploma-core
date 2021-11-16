@@ -1,0 +1,103 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.integracia.kz"
+  targetNamespace="http://www.integracia.kz" elementFormDefault="qualified">
+
+  <xs:element name="payment">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Data" type="tns:payment_app"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="payment_app">
+    <xs:sequence>
+      <xs:element name="command">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="check"/>
+            <xs:enumeration value="pay"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="txn_id"
+        type="xs:string"/>
+      <xs:element name="account"
+        type="xs:string"/>
+      <xs:element name="sum"
+        type="xs:decimal"/>
+      <xs:element name="pay_type">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:enumeration value="1"/>
+            <xs:enumeration value="2"/>
+            <xs:enumeration value="3"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="txn_date"
+        type="xs:dateTime"
+        minOccurs="0"/>
+      <xs:element name="contract_number"
+        type="xs:string"
+        minOccurs="0"/>
+      <xs:element name="contract_date"
+        type="xs:date"
+        minOccurs="0"/>
+      <xs:element name="service_name"
+        type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="paymentResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="return"
+          type="tns:response"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="response">
+    <xs:sequence>
+      <xs:element name="osmp_txn_id"
+        type="xs:string"/>
+      <xs:element name="result"
+        type="xs:string"/>
+      <xs:element name="comment"
+        type="xs:string"/>
+      <xs:element name="prv_txn"
+        type="xs:string"/>
+      <xs:element name="sum"
+        type="xs:decimal"/>
+      <xs:element name="account"
+        type="xs:string"/>
+      <xs:element name="fio"
+        type="xs:string"/>
+      <xs:element name="account_balance"
+        type="xs:decimal"/>
+      <xs:element name="contracts"
+        type="tns:contracts"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="contracts">
+    <xs:sequence>
+      <xs:element name="contract"
+        type="tns:contract"
+        minOccurs="0"
+        maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="contract">
+    <xs:sequence>
+      <xs:element name="contract_number" type="xs:string"/>
+      <xs:element name="contract_date" type="xs:date"/>
+      <xs:element name="amount_of_debt" type="xs:decimal"/>
+      <xs:element name="arrears" type="xs:decimal"/>
+      <xs:element name="planned_payment_date" type="xs:date"/>
+      <xs:element name="planned_payment_amount" type="xs:decimal"/>
+      <xs:element name="minimum_amount_of_partial_repayment" type="xs:decimal"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

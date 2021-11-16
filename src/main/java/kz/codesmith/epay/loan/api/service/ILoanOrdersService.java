@@ -92,4 +92,18 @@ public interface ILoanOrdersService {
   byte[] getLoanDebtorFormPdf(Integer orderId);
 
   void updateLoanOrderIdentityMatchResult(Integer orderId, Double result);
+
+  List<OrderDto> findAllOpenLoansByIin(String clientIin);
+
+  OrderDto updateScoringInfoAndEffectiveRateValues(
+      Integer orderId,
+      ScoringInfo scoringInfo,
+      BigDecimal loanEffectiveRate
+  );
+
+  OrderDto updateEffectiveRateAndInterestRateValues(
+      Integer orderId,
+      Float loanEffectiveRate,
+      Float interestRate
+  );
 }

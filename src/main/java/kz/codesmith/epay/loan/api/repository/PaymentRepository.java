@@ -16,10 +16,10 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Integer>
       "select p.paymentId, p.mfoProcessingMessage "
           + "from PaymentEntity as p "
           + "where p.insertedTime between :startTime and :endTime "
-          + "and p.mfoProcessingStatus = :processingStatus")
+          + "and p.mfoProcessingStatus in :processingStatus")
   List<Object[]> findPaymentIdByOrderTimeAndProcessingStatus(
       @Param("startTime") LocalDateTime startTime,
       @Param("endTime") LocalDateTime endTime,
-      @Param("processingStatus") MfoProcessingStatus processingStatus
+      @Param("processingStatus") List<MfoProcessingStatus> processingStatus
   );
 }

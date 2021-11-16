@@ -9,10 +9,12 @@ import kz.codesmith.epay.loan.api.requirement.Requirement;
 import kz.codesmith.epay.loan.api.requirement.RequirementResult;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
+import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
 import kz.com.fcb.fico.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 
 @SpringRequirement
 @RequiredArgsConstructor
@@ -22,20 +24,23 @@ public class ScoreAndBadRateRequirement implements Requirement<ScoringContext> {
   private final IPkbScoreService pkbScoreService;
   private int minScoreBall;
   private double maxPdBadRate;
+  private final IScoreVariablesService scoreVarsService;
+
+  @Value("${scoring.score-for-blacklist}")
+  private Integer blackListScore;
+
+  @Value("${scoring.badrate-for-blacklist}")
+  private Integer badRateBlackList;
 
   @Override
   @SneakyThrows
   public RequirementResult check(ScoringContext context) {
     var requestData = context.getRequestData();
-    minScoreBall = context.getVariablesHolder().getValue(ScoringVars.MIN_SCORE_BALL, Integer.class);
-    maxPdBadRate = context.getVariablesHolder()
-        .getValue(ScoringVars.MAX_PD_BAD_RATE, Integer.class);
+    minScoreBall = scoreVarsService.getValue(ScoringVars.MIN_SCORE_BALL, Integer.class);
+    maxPdBadRate = scoreVarsService.getValue(ScoringVars.MAX_PD_BAD_RATE, Integer.class);
     var iin = requestData.getIin();
-    var useFicoScoring = context.getVariablesHolder()
-        .getValue(ScoringVars.FICO_SCORING, Boolean.class);
-    var useBehvScoring = context.getVariablesHolder()
-        .getValue(ScoringVars.BEHAVIORAL_SCORING, Boolean.class);
     var isWhitelist = context.getRequestData().isWhiteList();
+    var isBlackList = context.getRequestData().isBlackList();
     log.info("Scoring context: {}", context.toString());
 
     if (isWhitelist) {
@@ -46,6 +51,15 @@ public class ScoreAndBadRateRequirement implements Requirement<ScoringContext> {
       return RequirementResult.success();
     }
 
+    if (isBlackList) {
+      log.info("IIN in blackList {}, no scoring", iin);
+      context.getScoringInfo().setScore(blackListScore);
+      context.getScoringInfo().setBadRate(badRateBlackList);
+      return RequirementResult.success();
+    }
+    var useFicoScoring = scoreVarsService.getValue(ScoringVars.FICO_SCORING, Boolean.class);
+    var useBehvScoring = scoreVarsService
+        .getValue(ScoringVars.BEHAVIORAL_SCORING, Boolean.class);
     if (useFicoScoring) {
       RequirementResult ficoResult = callFicoScoring(context, iin);
 

@@ -3,14 +3,16 @@ package kz.codesmith.epay.loan.api.service.impl;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
+import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
-import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculation;
+import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
+import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
-import kz.codesmith.logger.Logged;
 import kz.payintech.ListLoanMethod;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,9 +22,11 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AlternativeLoanCalculationService implements IAlternativeLoanCalculation {
+public class AlternativeLoanCalculationServiceImpl implements
+    IAlternativeLoanCalculationService {
 
   private final IMfoCoreService mfoCoreService;
+  private final ILoanOrdersService loanOrdersService;
 
   @Value("${scoring.max-kdn}")
   private double maxKdn;
@@ -100,6 +104,39 @@ public class AlternativeLoanCalculationService implements IAlternativeLoanCalcul
     }
     log.info("{} alternatives calculated", alternatives.size());
     return alternatives;
+  }
+
+  @Override
+  public List<AlternativeChoiceDto> calculateAlternative(BigDecimal loanAmount,
+      Integer loanMonthPeriod, float clientInterestRate, String creditProduct,
+      ListLoanMethod loanType, Double maxGesv, Integer orderId) {
+    var loanSchedule = mfoCoreService.getLoanScheduleCalculation(
+        loanAmount,
+        loanMonthPeriod,
+        clientInterestRate,
+        creditProduct,
+        loanType
+    );
+    if (Objects.nonNull(loanSchedule)) {
+      log.info("New client effective rate for alternative={}, is={}",
+          loanAmount, loanSchedule.getEffectiveRate());
+      loanOrdersService
+          .updateEffectiveRateAndInterestRateValues(orderId,
+              loanSchedule.getEffectiveRate(),
+              clientInterestRate);
+      if (loanSchedule.getEffectiveRate() < maxGesv) {
+        return Collections.singletonList(AlternativeChoiceDto.builder()
+            .loanAmount(loanAmount)
+            .loanInterestRate(BigDecimal.valueOf(clientInterestRate))
+            .loanMonthPeriod(loanMonthPeriod)
+            .build());
+      }
+      log.info("New client effective rate is bigger than maxGesv, {}, {}",
+          loanSchedule.getEffectiveRate(), maxGesv);
+      return new ArrayList<>();
+    } else {
+      throw  new MfoGeneralApiException();
+    }
   }
 
   private BigDecimal calculateAlternativeAmount(

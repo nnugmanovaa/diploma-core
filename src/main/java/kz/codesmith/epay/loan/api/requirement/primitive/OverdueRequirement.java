@@ -9,6 +9,7 @@ import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.Requirement;
 import kz.codesmith.epay.loan.api.requirement.RequirementResult;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
+import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 public class OverdueRequirement implements Requirement<ScoringContext> {
   private final RestTemplate restTemplate;
   private final PkbConnectorProperties pkbConnectorProps;
+  private final IScoreVariablesService scoreVarsService;
 
   @Override
   @SneakyThrows
@@ -35,6 +37,7 @@ public class OverdueRequirement implements Requirement<ScoringContext> {
     var iin = requestData.getIin();
 
     var isWhitelist = context.getRequestData().isWhiteList();
+    var isBlacklist = context.getRequestData().isBlackList();
     log.info("OverduePaymentsCheck. Scoring context: {}", context.toString());
     if (isWhitelist) {
       log.info("IIN in whitelist {}, no scoring", iin);
@@ -42,10 +45,14 @@ public class OverdueRequirement implements Requirement<ScoringContext> {
       return RequirementResult.success();
     }
 
-    var overduePeriod = context.getVariablesHolder()
-        .getValue(ScoringVars.OVERDUE_PERIOD, Long.class);
-    var overdueAmount = context.getVariablesHolder()
-        .getValue(ScoringVars.OVERDUE_AMOUNT, Long.class);
+    if (isBlacklist) {
+      log.info("IIN in whitelist {}, no scoring", iin);
+      context.getScoringInfo().setHasOverdue(false);
+      return RequirementResult.success();
+    }
+
+    var overduePeriod = scoreVarsService.getValue(ScoringVars.OVERDUE_PERIOD, Long.class);
+    var overdueAmount = scoreVarsService.getValue(ScoringVars.OVERDUE_AMOUNT, Long.class);
 
     var reportId = 6;
     var url = pkbConnectorProps.getUrl()
@@ -74,7 +81,6 @@ public class OverdueRequirement implements Requirement<ScoringContext> {
     } catch (HttpClientErrorException e) {
       if (e.getRawStatusCode() == 404) {
         log.error("Failed to get Overdue Payments for {}; Due to missing report at PKB", iin);
-        return RequirementResult.failure(RejectionReason.PREVIOUS_OVERDUES_CHECK_FAILED);
       } else {
         log.error("Failed to get Overdue Payments for {}; {}", iin, e.getMessage());
         return RequirementResult.failure(RejectionReason.SCORING_ERRORS);

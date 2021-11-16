@@ -15,6 +15,7 @@ import kz.codesmith.epay.loan.api.requirement.Requirement;
 import kz.codesmith.epay.loan.api.requirement.RequirementResult;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
+import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -38,6 +39,7 @@ public class ClientAbilityToPayRequirement implements Requirement<ScoringContext
 
   private final PkbConnectorProperties pkbConnectorProps;
   private final RestTemplate restTemplate;
+  private final IScoreVariablesService scoreVarService;
 
   @Value("${scoring.max-kdn}")
   private double maxKdn;
@@ -48,13 +50,19 @@ public class ClientAbilityToPayRequirement implements Requirement<ScoringContext
     var requestData = context.getRequestData();
     var iin = requestData.getIin();
     var isWhitelist = context.getRequestData().isWhiteList();
+    var isBlacklist = context.getRequestData().isBlackList();
 
     if (isWhitelist) {
       log.info("IIN in whitelist {}, no scoring", iin);
       return RequirementResult.success();
     }
 
-    costOfLiving = context.getVariablesHolder().getValue(ScoringVars.COST_OF_LIVING, Double.class);
+    if (isBlacklist) {
+      log.info("IIN in blackList {}, no scoring", iin);
+      return RequirementResult.success();
+    }
+
+    costOfLiving = scoreVarService.getValue(ScoringVars.COST_OF_LIVING, Double.class);
 
     //it seems response never returned as null
     ServiceReturn response = pkbScoreService.getContractSum(requestData.getIin(), true);

@@ -2,6 +2,7 @@ package kz.codesmith.epay.loan.api.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorType;
 import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
@@ -30,7 +31,8 @@ public class PaymentAnalyzerServiceImpl implements IPaymentAnalyzerService {
 
     List<Object[]> payments = paymentRepository
         .findPaymentIdByOrderTimeAndProcessingStatus(startTime, endTime,
-            MfoProcessingStatus.ERROR_IN_PROCESSING);
+            Arrays.asList(MfoProcessingStatus.ERROR_IN_PROCESSING,
+                MfoProcessingStatus.UNPROCESSED));
 
     List<TelegramLoanPaymentDto> outPayments = new ArrayList<>();
 

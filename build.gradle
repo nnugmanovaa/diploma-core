@@ -52,6 +52,52 @@ repositories {
     }
 }
 
+task genJaxb {
+    ext.sourcesDir = "${buildDir}/generated-sources/jaxb"
+    ext.classesDir = "${buildDir}/classes/jaxb"
+    ext.schema = "src/main/resources/wsdl/PitechPayment.xsd"
+
+    outputs.dir classesDir
+
+    doLast() {
+        project.ant {
+            taskdef name: "xjc", classname: "com.sun.tools.xjc.XJCTask",
+                    classpath: configurations.jaxb.asPath
+            mkdir(dir: sourcesDir)
+            mkdir(dir: classesDir)
+
+            xjc(destdir: sourcesDir, schema: schema) {
+                arg(value: "-wsdl")
+                produces(dir: sourcesDir, includes: "**/*.java")
+            }
+
+            javac(destdir: classesDir, source: 1.6, target: 1.6, debug: true,
+                    debugLevel: "lines,vars,source",
+                    classpath: configurations.jaxb.asPath) {
+                src(path: sourcesDir)
+                include(name: "**/*.java")
+                include(name: "*.java")
+            }
+
+            copy(todir: classesDir) {
+                fileset(dir: sourcesDir, erroronmissingdir: false) {
+                    exclude(name: "**/*.java")
+                }
+            }
+        }
+    }
+}
+
+configurations {
+    jaxb
+}
+
+jar {
+    baseName = 'gs-producing-web-service'
+    version =  '0.1.0'
+    from genJaxb.classesDir
+}
+
 ext {
     useSpringWeb = {
         dependencies {
@@ -354,7 +400,11 @@ dependencies {
     compile group: 'org.apache.poi', name: 'poi', version: '4.0.1'
     compile group: 'org.apache.poi', name: 'poi-ooxml', version: '4.0.1'
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    implementation 'org.springframework.boot:spring-boot-starter-ws:1.4.7.RELEASE'
 
+    compile("wsdl4j:wsdl4j:1.6.1")
+    jaxb("com.sun.xml.bind:jaxb-xjc:2.2.4-1")
+    compile(files(genJaxb.classesDir).builtBy(genJaxb))
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
 }
 
