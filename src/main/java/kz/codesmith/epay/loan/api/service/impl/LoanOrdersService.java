@@ -36,6 +36,7 @@ import kz.codesmith.epay.loan.api.service.IDocumentCreatePdf;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.codesmith.epay.loan.api.service.StorageService;
+import kz.codesmith.epay.loan.api.service.impl.excel.ExcelConstants;
 import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
 import kz.payintech.ListLoanMethod;
@@ -43,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.helpers.IOUtils;
@@ -76,6 +78,9 @@ public class LoanOrdersService implements ILoanOrdersService {
   public Page<OrderDto> getOrdersByUserOwner(LocalDate startDate, LocalDate endDate,
       Integer orderId, List<OrderState> states, Pageable pageRequest) {
     var currentUserContext = this.userContext.getContext();
+    if (CollectionUtils.isEmpty(states)) {
+      states = Arrays.asList(OrderState.values());
+    }
     switch (currentUserContext.getOwnerType()) {
       case OPERATOR:
       case AGENT:

@@ -23,8 +23,11 @@ public class ExcelReportServiceImpl implements IReportExcelService {
   private final ILoanOrdersService ordersServices;
 
   @Override
-  public byte[] getReport(LocalDate startDate, LocalDate endDate, Integer orderId,
-      List<OrderState> states) {
+  public byte[] getReport(ReportDto reportDto) {
+    List<OrderState> states = reportDto.getStates();
+    LocalDate startDate = reportDto.getStartDate();
+    LocalDate endDate = reportDto.getEndDate();
+    Integer orderId = reportDto.getOrderId();
     List<OrderDto> orderDtos = ordersServices.getOrdersByUserOwner(
         startDate,
         endDate,

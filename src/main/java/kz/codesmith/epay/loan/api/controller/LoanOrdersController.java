@@ -4,15 +4,14 @@ import io.swagger.annotations.ApiOperation;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.core.shared.controller.qualifier.ApiPageable;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
-import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IReportExcelService;
 import kz.codesmith.epay.loan.api.service.IReportService;
+import kz.codesmith.epay.loan.api.service.impl.excel.ReportDto;
 import kz.codesmith.logger.Logged;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +30,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -161,18 +162,12 @@ public class LoanOrdersController {
   }
 
   @ApiOperation(value = "Retrieves orders as excel file basing on logged user")
-  @GetMapping(path = "/excel")
-  public ResponseEntity<byte[]> getOrdersExcel(
-          @RequestParam @NotNull @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
-          @RequestParam @NotNull @DateTimeFormat(iso = ISO.DATE) LocalDate endDate,
-          @RequestParam List<OrderState> states,
-          @RequestParam(required = false) Integer orderId
-  ) {
-
-    byte[] ordersByArr = excelreportService.getReport(startDate, endDate, orderId, states);
+  @PostMapping(path = "/excel")
+  public ResponseEntity<byte[]> getOrdersExcel(@NotNull @RequestBody ReportDto reportDto) {
+    byte[] ordersByArr = excelreportService.getReport(reportDto);
     String filename = String.format("%s_%s.xlsx",
-        startDate.toString(),
-        endDate.toString());
+        reportDto.getStartDate().toString(),
+        reportDto.getEndDate().toString());
 
     if (Objects.isNull(ordersByArr)) {
       return ResponseEntity.notFound().build();

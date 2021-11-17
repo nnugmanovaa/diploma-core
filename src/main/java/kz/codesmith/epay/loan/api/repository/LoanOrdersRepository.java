@@ -29,9 +29,9 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
   );
 
   @Query("select o from OrderEntity o "
-          + "where ((:orderId IS NULL) OR o.orderId = :orderId) "
-          + "and o.insertedTime between :startTime and :endTime "
-          + "and ((:states IS NULL) OR o.status in :states)"
+      + "where ((:orderId IS NULL) OR o.orderId = :orderId) "
+      + "and o.insertedTime between :startTime and :endTime "
+      + "and o.status in (:states)"
   )
   Page<OrderEntity> findAllByInsertedTimeIsBetweenAndState(
       @Param("startTime") LocalDateTime startTime,

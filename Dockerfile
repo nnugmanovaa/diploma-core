@@ -15,5 +15,7 @@ EXPOSE 8083
 
 ENTRYPOINT ["java"]
 
+RUN apk add --update ttf-dejavu &&  apk add --update fontconfig
+
 CMD [ "-XX:+UnlockExperimentalVMOptions", \
       "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/loan-api.jar" ]
