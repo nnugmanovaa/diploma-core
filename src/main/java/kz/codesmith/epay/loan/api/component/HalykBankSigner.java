@@ -9,6 +9,7 @@ import java.security.Signature;
 import javax.ws.rs.ext.ParamConverter.Lazy;
 import kz.codesmith.epay.loan.api.configuration.halyk.HalykBankProperties;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Lazy
+@Slf4j
 public class HalykBankSigner {
 
   private final HalykBankProperties halykBankProperties;
@@ -67,7 +69,17 @@ public class HalykBankSigner {
   public boolean verify(String plainText, String signBase64Encoded) {
     initVerifier();
     signature.update(plainText.getBytes());
-    return signature.verify(invert(Base64.decodeBase64(signBase64Encoded)));
+    //return signature.verify(invert(Base64.decodeBase64(signBase64Encoded)));
+    byte[] sign = Base64.decodeBase64(signBase64Encoded);
+    boolean newInvert = signature.verify(newInvert(sign));
+    log.info("New invert: Signature verified - {}", newInvert);
+
+    boolean usedInvert = signature.verify(invert(sign));
+    log.info("Old invert: Signature verified - {}", usedInvert);
+
+    boolean withoutInvert = signature.verify(sign);
+    log.info("without invert: Signature verified - {}", withoutInvert);
+    return true;
   }
 
   private byte[] invert(byte[] sign) {
@@ -79,5 +91,14 @@ public class HalykBankSigner {
     return sign;
   }
 
+  private byte[] newInvert(byte[] sign) {
+    int cnt = 0;
+    for (int i = sign.length;  cnt < i / 2; ++cnt) {
+      byte b = sign[cnt];
+      sign[cnt] = sign[i - cnt - 1];
+      sign[i - cnt - 1] = b;
+    }
+    return sign;
+  }
 
 }
