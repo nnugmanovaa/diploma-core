@@ -73,8 +73,14 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
         report.getKdnScore(),
         report.getDebt());
 
-
     var kdnScore = report.getKdnScore();
+    var debt = new BigDecimal(report.getDebt());
+    var income = new BigDecimal(report.getIncome());
+
+    context.getScoringInfo().setKdn(kdnScore);
+    context.getScoringInfo().setDebt(debt);
+    context.getScoringInfo().setIncome(income);
+
     log.info("PKB KDN is {}", kdnScore);
     if (kdnScore >= maxKdn) {
       log.info("(kdnScore >= maxKdn) {} >= {}. check for alternative",
@@ -97,8 +103,6 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
     var period = new BigDecimal(requestData.getLoanPeriod());
     var avgMonthlyPayment = context.getLoanSchedule().getTotalAmountToBePaid()
         .divide(period, 2, RoundingMode.HALF_UP);
-    var debt = new BigDecimal(report.getDebt());
-    var income = new BigDecimal(report.getIncome());
     var newKdn = avgMonthlyPayment.add(debt).divide(income, 2, RoundingMode.HALF_UP);
 
     log.info("New KDN is {}", newKdn.toString());
@@ -110,10 +114,7 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
       return RequirementResult.failure(AlternativeRejectionReason.NEW_KDN_TOO_BIG);
     }
 
-    context.getScoringInfo().setKdn(kdnScore);
     context.getScoringInfo().setNewKdn(newKdn);
-    context.getScoringInfo().setDebt(debt);
-    context.getScoringInfo().setIncome(income);
 
     log.info("KdnCalculationRequirement.success()");
     return RequirementResult.success();

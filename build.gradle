@@ -381,7 +381,7 @@ afterEvaluate {
 }
 
 dependencies {
-    implementation 'kz.codesmith.epay:shared-models:0.0.1-RELEASE'
+    implementation 'kz.codesmith.epay:shared-models:0.0.2-RELEASE'
     implementation 'kz.codesmith.epay:lib-security:0.0.1-RELEASE'
     implementation 'kz.codesmith.epay:lib-ws-connector:0.0.1-RELEASE'
     implementation 'kz.codesmith.epay:gw-telegram-api:0.0.1-RELEASE'

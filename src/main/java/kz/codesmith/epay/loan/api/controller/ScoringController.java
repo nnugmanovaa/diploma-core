@@ -253,6 +253,14 @@ public class ScoringController {
 
     if (!CollectionUtils.isEmpty(alternatives)) {
       alternatives = ordersServices.createNewAlternativeLoanOrders(order, alternatives);
+      alternatives.forEach(alternativeChoiceDto -> {
+        ordersServices
+            .updateEffectiveRateAndInterestRateValues(alternativeChoiceDto.getOrderId(),
+                alternativeChoiceDto.getLoanEffectiveRate(),
+                alternativeChoiceDto
+                    .getLoanInterestRate()
+                    .floatValue());
+      });
       var resp = ScoringResponse.builder()
           .result(result.getResult())
           .orderId(order.getOrderId())

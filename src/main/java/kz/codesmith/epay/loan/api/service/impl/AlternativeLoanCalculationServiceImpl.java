@@ -120,15 +120,12 @@ public class AlternativeLoanCalculationServiceImpl implements
     if (Objects.nonNull(loanSchedule)) {
       log.info("New client effective rate for alternative={}, is={}",
           loanAmount, loanSchedule.getEffectiveRate());
-      loanOrdersService
-          .updateEffectiveRateAndInterestRateValues(orderId,
-              loanSchedule.getEffectiveRate(),
-              clientInterestRate);
       if (loanSchedule.getEffectiveRate() < maxGesv) {
         return Collections.singletonList(AlternativeChoiceDto.builder()
             .loanAmount(loanAmount)
             .loanInterestRate(BigDecimal.valueOf(clientInterestRate))
             .loanMonthPeriod(loanMonthPeriod)
+            .loanEffectiveRate(loanSchedule.getEffectiveRate())
             .build());
       }
       log.info("New client effective rate is bigger than maxGesv, {}, {}",
