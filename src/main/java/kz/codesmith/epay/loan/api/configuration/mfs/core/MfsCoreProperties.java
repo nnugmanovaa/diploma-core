@@ -34,4 +34,13 @@ public class MfsCoreProperties {
   @NotBlank
   private String getClientUrl;
 
+  @NotBlank
+  private String agentName;
+
+  @NotBlank
+  private String agentPassword;
+
+  @NotBlank
+  private String initTopUpUrl;
+
 }

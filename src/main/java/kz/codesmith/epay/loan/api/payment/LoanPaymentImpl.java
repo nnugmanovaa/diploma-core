@@ -158,8 +158,8 @@ public class LoanPaymentImpl implements ILoanPayment {
     LoanPaymentResponseDto paymentResponse = processPayment(paymentDto);
     paymentService.updateProcessingInfo(paymentId, paymentResponse);
 
-    messageService.fireLoanStatusGetEvent(paymentDto.getClientRef(),
-        AmqpConfig.LOAN_STATUSES_ROUTING_KEY);
+    messageService.fireLoanIinStatusGetEvent(paymentDto.getClientRef(),
+        AmqpConfig.LOAN_STATUSES_IIN_ROUTING_KEY);
 
     return paymentResponse;
   }

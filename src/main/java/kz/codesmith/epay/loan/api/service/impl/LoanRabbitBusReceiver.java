@@ -1,20 +1,22 @@
 package kz.codesmith.epay.loan.api.service.impl;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import kz.codesmith.epay.core.shared.model.analyzes.LoanPaymentErrorDto;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
+import kz.codesmith.epay.loan.api.model.cashout.InitClientWalletTopUpDirectDto;
+import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.payment.ILoanPayment;
+import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.payment.LoanPaymentStatus;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
@@ -22,6 +24,7 @@ import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.telegram.gw.controller.ITelegramBotController;
+import kz.integracia.Contract;
 import kz.payintech.InformationTheAgreement;
 import kz.payintech.ResultResponsegetUserContractsList;
 import kz.payintech.siteexchange.SiteExchangePortType;
@@ -32,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.common.util.CollectionUtils;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -52,6 +56,7 @@ public class LoanRabbitBusReceiver {
   private final SiteExchangePortType siteExchangePortType;
   private final PaymentServicesPortType servicesPortType;
   private final RabbitTemplate rabbitTemplate;
+  private final CoreTopUpService topUpService;
 
   public static final String SUCCESS_RESPONSE_RESULT = "0";
   public static final String ORIGIN_EXCHANGE_HEADER = "x-first-death-exchange";
@@ -87,38 +92,88 @@ public class LoanRabbitBusReceiver {
   }
 
   @RabbitListener(
+      queues = {AmqpConfig.LOAN_STATUSES_IIN_QUEUE_NAME},
+      containerFactory = "jsaFactory",
+      group = "loan-api"
+  )
+  public void getLoanStatusesIinListener(String iin) {
+    getLoanStatuses(iin, null);
+  }
+
+  @RabbitListener(
       queues = {AmqpConfig.LOAN_STATUSES_QUEUE_NAME},
       containerFactory = "jsaFactory",
       group = "loan-api"
   )
-  public void getLoanStatuses(String iin) {
+  public void getLoanStatusesListener(PaymentAppEntityEventDto entityEventDto) {
+    getLoanStatuses(entityEventDto.getPayment().getData().getAccount(), entityEventDto);
+  }
+
+  public void getLoanStatuses(String iin, PaymentAppEntityEventDto entityEventDto) {
+    log.info("Processing status update");
     List<OrderDto> orderDtos = getClientOpenLoans(iin);
     if (!CollectionUtils.isEmpty(orderDtos)) {
       List<InformationTheAgreement> contracts = getClientContracts(iin);
       if (!CollectionUtils.isEmpty(contracts)) {
         orderDtos.forEach(orderDto -> {
-          updateLoanStatus(orderDto, contracts);
+          updateLoanStatus(orderDto, contracts, entityEventDto);
         });
       }
     }
   }
 
-  private void updateLoanStatus(OrderDto orderDto, List<InformationTheAgreement> contracts) {
+  @RabbitListener(
+      queues = {AmqpConfig.CASHOUT_PAYMENT_QUEUE_NAME},
+      containerFactory = "jsaFactory",
+      group = "loan-api"
+  )
+  public void initCashoutForRemain(PaymentAppEntityEventDto entityEventDto) {
+    try {
+      Contract checkContract = entityEventDto.getContract();
+      if (checkContract.getAmountOfDebt().compareTo(entityEventDto.getPayment()
+          .getData().getSum()) != -1) {
+        log.info("No need to cashout");
+      } else {
+        log.info("Init cashout");
+        InitClientWalletTopUpDirectDto topUpDto = InitClientWalletTopUpDirectDto.builder()
+            .iin(entityEventDto.getIin())
+            .amount((entityEventDto.getPayment().getData().getSum()
+                .subtract(checkContract.getAmountOfDebt())).doubleValue())
+            .description("Excessive amount for credit payment")
+            .extRefOrderIdValue(entityEventDto.getExtRefId())
+            .extRefOrderTimeValue(new Date())
+            .operation(CoreTopUpService.CORE_TOPUP_OPERATION_NAME)
+            .build();
+        topUpService.initClientTopUpDirect(topUpDto);
+      }
+    } catch (Exception e) {
+      log.error("Error while cashout");
+    }
+  }
+
+  private void updateLoanStatus(OrderDto orderDto, List<InformationTheAgreement> contracts,
+      PaymentAppEntityEventDto entityEventDto) {
     contracts.forEach(contract -> {
       if (contract.getNumber().equals(orderDto.getContractExtRefId())) {
-        setLoanPaymentStatus(orderDto, contract.getStatus());
+        setLoanPaymentStatus(orderDto, contract, entityEventDto);
       }
     });
   }
 
-  private void setLoanPaymentStatus(OrderDto orderDto, String status) {
-    switch (status) {
+  private void setLoanPaymentStatus(OrderDto orderDto, InformationTheAgreement contract,
+      PaymentAppEntityEventDto entityEventDto) {
+    switch (contract.getStatus()) {
       case LOAN_REDEEMED_EARLY_STATUS :
       case LOAN_REDEEMED_STATUS : {
         orderDto.setStatus(OrderState.CLOSED);
         loanOrdersRepository.save(mapper.map(orderDto, OrderEntity.class));
         log.info("Order status updated for orderId={}, set={}",
             orderDto.getOrderId(), OrderState.CLOSED);
+        if (entityEventDto != null) {
+          entityEventDto.setExtRefId(String.valueOf(orderDto.getOrderId()));
+          rabbitTemplate.convertAndSend(AmqpConfig.CASHOUT_PAYMENT_EXCHANGE_NAME,
+              AmqpConfig.CASHOUT_ROUTING_KEY, entityEventDto);
+        }
         break;
       }
       default: {
@@ -151,7 +206,7 @@ public class LoanRabbitBusReceiver {
           .newXMLGregorianCalendar(paymentDto.getContractDate()));
       app.setTxnDate(DatatypeFactory.newDefaultInstance()
           .newXMLGregorianCalendar(String.valueOf(LocalDateTime.now())));
-
+      app.setCommand(LoanPaymentConstants.TYPE_PAY);
       Response response = servicesPortType.payment(app);
       if (Objects.nonNull(response) && Objects.nonNull(response.getResult())) {
         if (response.getResult().equals(SUCCESS_RESPONSE_RESULT)) {
@@ -210,10 +265,26 @@ public class LoanRabbitBusReceiver {
     }
   }
 
+  @RabbitListener(
+      group = "epay-core",
+      queues = {AmqpConfig.LOAN_STATUS_DLX_QUEUE_NAME},
+      containerFactory = "jsaFactory"
+  )
+  public void dlxLoanStatusProcesssing(Message message) {
+    try {
+      log.info("Init DLX loan processing");
+      String originalRoutingKey = message.getMessageProperties().getReceivedRoutingKey();
+      rabbitTemplate.convertAndSend(AmqpConfig.LOAN_STATUSES_EXCHANGE_NAME, originalRoutingKey,
+          message);
+    } catch (Exception e) {
+      log.error("Message cannot be reprocessed: ", e);
+    }
+  }
+
   private List<OrderDto> getClientOpenLoans(String iin) {
     return loanOrdersRepository
         .findAllByIinAndStatusIn(iin, Arrays
-                .asList(OrderState.CASHED_OUT_CARD, OrderState.CASHED_OUT_WALLET))
+            .asList(OrderState.CASHED_OUT_CARD, OrderState.CASHED_OUT_WALLET, OrderState.CLOSED))
         .stream()
         .map(o -> mapper.map(o, OrderDto.class))
         .collect(Collectors.toList());
@@ -234,4 +305,5 @@ public class LoanRabbitBusReceiver {
         .comment(message)
         .build();
   }
+
 }

@@ -33,19 +33,29 @@ public class AmqpConfig {
   public static final String PAYMENT_ROUTING_KEY_TEMPLATE = "#.loan-payments";
 
   public static final String LOAN_STATUSES_ROUTING_KEY = "loan.loan-status";
+  public static final String LOAN_STATUSES_IIN_ROUTING_KEY = "loan.loan-status-by-iin";
   public static final String LOAN_STATUSES_EXCHANGE_NAME = "loan-status-exchange";
   public static final String LOAN_STATUSES_QUEUE_NAME = "queue-loan-status";
+  public static final String LOAN_STATUSES_IIN_QUEUE_NAME = "queue-loan-iin-status";
   public static final String LOAN_STATUSES_ROUTING_KEY_TEMPLATE = "#.loan-status";
+  public static final String LOAN_STATUSES_IIN_ROUTING_KEY_TEMPLATE = "#.loan-status-by-iin";
 
   public static final String LOAN_PAYMENT_ROUTING_KEY = "loan.loan-payment";
   public static final String LOAN_PAYMENT_EXCHANGE_NAME = "loan-payment-exchange";
   public static final String LOAN_PAYMENT_QUEUE_NAME = "queue-loan-payment";
   public static final String LOAN_PAYMENT_ROUTING_KEY_TEMPLATE = "#.loan-payment";
 
-  public static final String WAIT_EXCHANGE_NAME = "loan-wait-exchange";
-  public static final String WAIT_QUEUE_NAME = "queue-loan-wait";
+  public static final String CASHOUT_ROUTING_KEY = "client.cashout-payment";
+  public static final String CASHOUT_PAYMENT_EXCHANGE_NAME = "cashout-payment-exchange";
+  public static final String CASHOUT_PAYMENT_QUEUE_NAME = "queue-cashout-payment";
+  public static final String CASHOUT_PAYMENT_ROUTING_KEY_TEMPLATE = "#.cashout-payment";
+
+  public static final String LOAN_WAIT_EXCHANGE_NAME = "loan-wait-exchange";
+  public static final String LOAN_WAIT_QUEUE_NAME = "queue-loan-wait";
   public static final String DLX_EXCHANGE_NAME = "loan-dlx-exchange";
   public static final String DLX_QUEUE_NAME = "queue-loan-dlx";
+  public static final String LOAN_STATUS_DLX_QUEUE_NAME = "queue-loan-status-dlx";
+  public static final String LOAN_STATUS_DLX_EXCHANGE_NAME = "loan-status-dlx-exchange";
 
   @Value("${loan-status-delay}")
   private int loanStatusDelay;
@@ -64,7 +74,7 @@ public class AmqpConfig {
 
   @Bean
   public FanoutExchange waitExchange() {
-    return new FanoutExchange(WAIT_EXCHANGE_NAME);
+    return new FanoutExchange(LOAN_WAIT_EXCHANGE_NAME);
   }
 
   @Bean
@@ -73,10 +83,15 @@ public class AmqpConfig {
   }
 
   @Bean
+  public FanoutExchange loanStatusDlxExchange() {
+    return new FanoutExchange(LOAN_STATUS_DLX_EXCHANGE_NAME);
+  }
+
+  @Bean
   public Queue waitQueue() {
-    return QueueBuilder.durable(WAIT_QUEUE_NAME)
+    return QueueBuilder.durable(LOAN_WAIT_QUEUE_NAME)
         .ttl(loanStatusDelay)
-        .deadLetterExchange(DLX_EXCHANGE_NAME)
+        .deadLetterExchange(LOAN_STATUS_DLX_EXCHANGE_NAME)
         .build();
   }
 
@@ -87,10 +102,23 @@ public class AmqpConfig {
   }
 
   @Bean
+  public Queue loanStatusDlxQueue() {
+    return QueueBuilder.durable(LOAN_STATUS_DLX_QUEUE_NAME)
+        .build();
+  }
+
+  @Bean
   public Binding bindingDlxQueue() {
     return BindingBuilder
         .bind(dlxQueue())
         .to(dlxExchange());
+  }
+
+  @Bean
+  public Binding bindingLoanStatusDlxQueue() {
+    return BindingBuilder
+        .bind(loanStatusDlxQueue())
+        .to(loanStatusDlxExchange());
   }
 
   @Bean
@@ -126,7 +154,12 @@ public class AmqpConfig {
   @Bean
   public Queue loanStatusQueue() {
     return QueueBuilder.durable(LOAN_STATUSES_QUEUE_NAME)
-        .deadLetterExchange(WAIT_EXCHANGE_NAME)
+        .build();
+  }
+
+  @Bean
+  public Queue loanIinStatusQueue() {
+    return QueueBuilder.durable(LOAN_STATUSES_IIN_QUEUE_NAME)
         .build();
   }
 
@@ -136,6 +169,14 @@ public class AmqpConfig {
         .bind(loanStatusQueue())
         .to(loanStatusTopicExchange())
         .with(LOAN_STATUSES_ROUTING_KEY_TEMPLATE);
+  }
+
+  @Bean
+  public Binding bindingLoanIinStatusQueue() {
+    return BindingBuilder
+        .bind(loanIinStatusQueue())
+        .to(loanStatusTopicExchange())
+        .with(LOAN_STATUSES_IIN_ROUTING_KEY_TEMPLATE);
   }
 
   @Bean
@@ -154,6 +195,24 @@ public class AmqpConfig {
         .bind(loanPaymentQueue())
         .to(loanPaymentTopicExchange())
         .with(LOAN_PAYMENT_ROUTING_KEY_TEMPLATE);
+  }
+
+  @Bean
+  public TopicExchange cashOutPaymentTopicExchange() {
+    return new TopicExchange(CASHOUT_PAYMENT_EXCHANGE_NAME);
+  }
+
+  @Bean
+  public Queue cashOutPaymentQueue() {
+    return new Queue(CASHOUT_PAYMENT_QUEUE_NAME);
+  }
+
+  @Bean
+  public Binding bindingCashOutPaymentQueue() {
+    return BindingBuilder
+        .bind(cashOutPaymentQueue())
+        .to(cashOutPaymentTopicExchange())
+        .with(CASHOUT_PAYMENT_ROUTING_KEY_TEMPLATE);
   }
 
   @Bean

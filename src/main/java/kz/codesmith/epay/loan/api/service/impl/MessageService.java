@@ -1,6 +1,7 @@
 package kz.codesmith.epay.loan.api.service.impl;
 
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
+import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.service.IMessageService;
@@ -24,8 +25,13 @@ public class MessageService implements IMessageService {
   }
 
   @Override
-  public void fireLoanStatusGetEvent(String iin, String routingKey) {
-    rabbitTemplate.convertAndSend(AmqpConfig.LOAN_STATUSES_EXCHANGE_NAME, routingKey, iin);
+  public void fireLoanIinStatusGetEvent(String iin, String routingKey) {
+    rabbitTemplate.convertAndSend(AmqpConfig.LOAN_WAIT_EXCHANGE_NAME, routingKey, iin);
+  }
+
+  @Override
+  public void fireLoanStatusGetEvent(PaymentAppEntityEventDto eventDto, String routingKey) {
+    rabbitTemplate.convertAndSend(AmqpConfig.LOAN_WAIT_EXCHANGE_NAME, routingKey, eventDto);
   }
 
   @Override

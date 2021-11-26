@@ -1,10 +1,13 @@
 package kz.codesmith.epay.loan.api.payment.ws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigInteger;
 import java.util.Objects;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
 import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringBaseStatus;
+import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
+import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.loan.api.service.impl.MessageService;
 import kz.integracia.Contract;
@@ -15,6 +18,7 @@ import kz.pitech.mfo.PaymentApp;
 import kz.pitech.mfo.PaymentServicesPortType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,15 @@ public class LoanWsPaymentImpl implements ILoanWsPayment {
   @Transactional
   @Override
   public Response processPayment(Payment paymentApp) {
+    paymentApp.getData().setCommand(LoanPaymentConstants.TYPE_CHECK);
+    kz.integracia.Response checkResponse = checkAccount(paymentApp);
+    Contract checkedContract = checkResponse.getContracts().getContract().stream()
+        .filter(contract -> contract.getContractNumber()
+            .equals(paymentApp.getData().getContractNumber()))
+        .findFirst().get();
+    if (checkedContract.getAmountOfDebt().compareTo(paymentApp.getData().getSum()) != 1) {
+      paymentApp.getData().setPayType(new BigInteger("3"));
+    }
     PaymentEntity paymentEntity = paymentService.startNewPayment(paymentApp);
     messageService.fireLoanPaymentEvent(LoanWsPaymentDto.builder()
         .paymentApp(paymentApp.getData())
@@ -41,12 +54,18 @@ public class LoanWsPaymentImpl implements ILoanWsPayment {
         .build(),
         AmqpConfig.LOAN_PAYMENT_ROUTING_KEY);
     messageService
-        .fireLoanStatusGetEvent(paymentApp
-                .getData()
-                .getAccount(),
+        .fireLoanStatusGetEvent(PaymentAppEntityEventDto.builder()
+             .iin(paymentApp
+                 .getData()
+                 .getAccount())
+            .extRefId(StringUtils.EMPTY)
+            .payment(paymentApp)
+            .contract(checkedContract)
+            .build(),
             AmqpConfig.LOAN_STATUSES_ROUTING_KEY);
     paymentEntity.setInitPaymentStatus(AcquiringBaseStatus.SUCCESS);
-    return fillResponse(paymentApp.getData().getAccount());
+    return fillResponse(paymentApp.getData().getAccount(),
+        String.valueOf(paymentEntity.getPaymentId()));
   }
 
   @Override
@@ -85,11 +104,12 @@ public class LoanWsPaymentImpl implements ILoanWsPayment {
     return result;
   }
 
-  private Response fillResponse(String account) {
+  private Response fillResponse(String account, String extRefId) {
     Response response = new Response();
     response.setAccount(account);
     response.setComment("Платеж принят");
     response.setResult(SUCCESS_RESPONSE_RESULT);
+    response.setOsmpTxnId(extRefId);
     return response;
   }
 }

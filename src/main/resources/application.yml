@@ -87,6 +87,9 @@ integration:
     signin-url: ${INTEGRATION_MFS_CORE_SIGNIN_URL:/auth/signin}
     get-user-url: ${INTEGRATION_MFS_CORE_GET_USER_URL:/admin/users}
     get-client-url: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:/admin/clients/by-clientname}
+    agent-name: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:agent_1000_user}
+    agent-password: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:q}
+    init-top-up-url: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:/agent/wallets/topup/direct}
   halyk:
     password: '${INTEGRATION_HALYK_CERT_PASSWORD:nissan}'
     certificate: '${INTEGRATION_HALYK_CERTIFICATE:classpath:halyk/certificate.jks}'

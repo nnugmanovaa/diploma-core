@@ -62,7 +62,7 @@ public class AppConfig {
   @Bean
   public ModelMapper modelMapper() {
     ModelMapper modelMapper = new ModelMapper();
-    modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STANDARD);
+    modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 
     createCheck2PkbCheckEntity(modelMapper);
     createDynamicCheck2Check(modelMapper);
