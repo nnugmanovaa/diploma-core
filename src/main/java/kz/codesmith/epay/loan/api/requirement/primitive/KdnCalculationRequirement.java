@@ -1,14 +1,17 @@
 package kz.codesmith.epay.loan.api.requirement.primitive;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Objects;
 import kz.codesmith.epay.loan.api.annotation.SpringRequirement;
 import kz.codesmith.epay.loan.api.configuration.PkbConnectorProperties;
 import kz.codesmith.epay.loan.api.model.exception.PkbRequestFailedException;
 import kz.codesmith.epay.loan.api.model.pkb.kdn.ApplicationReport;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.Data;
 import kz.codesmith.epay.loan.api.model.pkb.kdn.KdnRequest;
 import kz.codesmith.epay.loan.api.model.scoring.AlternativeLoanParams;
 import kz.codesmith.epay.loan.api.model.scoring.AlternativeRejectionReason;
@@ -37,6 +40,7 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
 
   private final PkbConnectorProperties pkbConnectorProps;
   private final RestTemplate restTemplate;
+  private final ObjectMapper objectMapper;
   private final IScoreVariablesService scoreVarsService;
 
   @Value("${scoring.max-kdn}")
@@ -123,6 +127,21 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
       return RequirementResult.failure(AlternativeRejectionReason.NEW_KDN_TOO_BIG);
     }
 
+    Data deductionsData;
+    if (report != null
+        && report.getIncomesResultCrtrV2() != null
+        && report.getIncomesResultCrtrV2().getResult() != null
+        && report.getIncomesResultCrtrV2().getResult().getResponseData() != null) {
+
+      deductionsData = report.getIncomesResultCrtrV2()
+          .getResult()
+          .getResponseData()
+          .getData();
+      context.getScoringInfo().setIncomesInfo(
+          objectMapper.convertValue(deductionsData, Map.class));
+    }
+
+    context.getScoringInfo().setKdn(kdnScore);
     context.getScoringInfo().setNewKdn(newKdn);
 
     log.info("KdnCalculationRequirement.success()");

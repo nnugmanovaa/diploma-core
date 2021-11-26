@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderReportRecord;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.Data;
 import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringInfo;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
@@ -45,6 +46,8 @@ public class ExcelReportServiceImpl implements IReportExcelService {
 
   private OrderReportRecord getRecord(OrderDto orderDto) {
     ObjectMapper objectMapper = new ObjectMapper();
+    Data data = objectMapper.convertValue(
+        orderDto.getIncomesInfo(), Data.class);
     return OrderReportRecord.builder()
         .orderId(orderDto.getOrderId())
         .status(orderDto.getStatus())
@@ -60,6 +63,9 @@ public class ExcelReportServiceImpl implements IReportExcelService {
             .convertValue(orderDto.getPersonalInfo(), PersonalInfoDto.class))
         .scoringInfo(objectMapper
             .convertValue(orderDto.getScoringInfo(), ScoringInfo.class))
+        .scoringRejectionReason(orderDto.getScoringRejectReason())
+        .deductionsInfo(data
+            .getDeductionsDetailed())
         .build();
 
   }

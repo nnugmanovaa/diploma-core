@@ -75,4 +75,6 @@ public class OrderDto extends AbstractDto {
 
   private Map<String, Object> scoringInfo;
 
+  private Map<String, Object> incomesInfo;
+
 }

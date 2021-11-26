@@ -36,7 +36,6 @@ import kz.codesmith.epay.loan.api.service.IDocumentCreatePdf;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.codesmith.epay.loan.api.service.StorageService;
-import kz.codesmith.epay.loan.api.service.impl.excel.ExcelConstants;
 import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
 import kz.payintech.ListLoanMethod;
@@ -413,6 +412,7 @@ public class LoanOrdersService implements ILoanOrdersService {
         new TypeReference<>() {
         })
     );
+    order.setIncomesInfo(scoringInfo.getIncomesInfo());
     loanOrdersRepository.save(order);
     return mapper.map(order, OrderDto.class);
   }

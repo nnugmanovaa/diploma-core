@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import kz.codesmith.epay.loan.api.model.orders.OrderReportRecord;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.DeductionsDetailed;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -60,8 +61,14 @@ public class ExcelHelper {
             .isHasOverdue() ? "Есть" : "Нет");
         setRowColumnValue(dateRow, 25, source.get(i).getScoringInfo().getMaxPaymentSum());
         setRowColumnValue(dateRow, 26, source.get(i).getScoringInfo().getMaxContractSum());
+        setRowColumnValue(dateRow, 27, source.get(i).getScoringRejectionReason());
+        List<DeductionsDetailed> list = source.get(i).getDeductionsInfo();
+        int size = list.size() > 5 ? 6 : list.size();
+        for (int k = 0; k < size; k++) {
+          setRowColumnValue(dateRow, k + 28, list.get(k).getAmount());
+        }
       }
-      for (int i = 0; i < 25; i++) {
+      for (int i = 0; i < 27; i++) {
         sheet.autoSizeColumn(i);
       }
       workbook.write(out);

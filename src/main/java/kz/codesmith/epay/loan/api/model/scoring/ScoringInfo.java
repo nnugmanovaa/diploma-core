@@ -1,6 +1,7 @@
 package kz.codesmith.epay.loan.api.model.scoring;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -15,5 +16,5 @@ public class ScoringInfo {
   private double maxPaymentSum;
   private double maxContractSum;
   private boolean hasOverdue;
-
+  private Map<String, Object> incomesInfo;
 }

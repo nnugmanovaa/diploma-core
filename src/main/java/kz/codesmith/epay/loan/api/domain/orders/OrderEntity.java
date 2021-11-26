@@ -149,6 +149,11 @@ public class OrderEntity {
   @NotNull
   private Map<String, Object> scoringInfo = new HashMap<>();
 
+  @Column(name = "incomes_info")
+  @Type(type = "JsonMapDataType")
+  @NotNull
+  private Map<String, Object> incomesInfo = new HashMap<>();
+
   @PrePersist
   public void toCreate() {
     setInsertedTime(Utils.now());
