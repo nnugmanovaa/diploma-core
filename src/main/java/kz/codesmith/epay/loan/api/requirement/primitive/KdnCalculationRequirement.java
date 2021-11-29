@@ -48,6 +48,7 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
     var isWhitelist = context.getRequestData().isWhiteList();
     var isBlackList = context.getRequestData().isBlackList();
     var minScoreBall = scoreVarsService.getValue(ScoringVars.MIN_SCORE_BALL, Integer.class);
+    var maxKdnAlter = scoreVarsService.getValue(ScoringVars.MAX_KDN_ALTER, Integer.class);
     if (isWhitelist) {
       log.info("IIN in whitelist {}, no scoring", iin);
       return RequirementResult.success();
@@ -86,7 +87,9 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
       log.info("(kdnScore >= maxKdn) {} >= {}. check for alternative",
           kdnScore, maxKdn);
       Integer userScore = context.getScoringInfo().getScore();
-      if (userScore > minScoreBall) {
+      if (userScore > minScoreBall && kdnScore <= maxKdnAlter) {
+        log.info("(kdnScore >= maxKdn) {} >= {} and (kdnScore <= maxKdnForAlternative) {} <= {}",
+            kdnScore, maxKdn, kdnScore, maxKdnAlter);
         Double loanAmount = context.getRequestData().getLoanAmount();
         Double costOfLiving = context.getVariablesHolder()
             .getValue(ScoringVars.COST_OF_LIVING, Double.class);
@@ -179,7 +182,7 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
     report.setDebt(0d);
     report.setIncome(200000d);
     report.setIin(iin);
-    report.setKdnScore(4.5);
+    report.setKdnScore(0.8);
     return report;
   }
 }

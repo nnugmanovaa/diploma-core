@@ -88,6 +88,30 @@ task genJaxb {
     }
 }
 
+buildscript {
+    ext {
+        migrationsPath = getProjectDir().toString() + '/src/main/resources/db/migration'
+    }
+}
+
+def isFilePrefixed(file) {
+    return (file.name ==~ '^V\\d+.*\\.sql\$') || (file.name ==~ '^V\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}.*\\.sql\$') || (file.name ==~ '^V\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}[.]\\d{1,3}__.*\\.sql\$')
+}
+
+task prefixNewMigrations(group: 'flyway') {
+    fileTree(dir: migrationsPath).exclude({ isFilePrefixed(it.file) })
+            .each {
+                file ->
+                    doLast {
+                        def timestamp = new Date().format('yyyyMMddHHmmssSSS', TimeZone.getTimeZone('GMT'))
+                        println "Renaming $file.name to V${timestamp}__$file.name"
+                        file.renameTo("$file.parentFile.absolutePath$file.separator" + "V" + "${timestamp}__$file.name")
+                        // Sleep for a moment to avoid prefix conflicts when renaming multiple files
+                        sleep(1 * 1000)
+                    }
+            }
+}
+
 configurations {
     jaxb
 }

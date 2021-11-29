@@ -133,7 +133,7 @@ scoring:
   iin.whitelist: '${SCORING_IIN_WHITELIST:870807302559,930521300869,880818401261,880203300065,861015300309,870807302559}'
   iin.backlist: '${SCORING_IIN_BLACKLIST:011124600444,910111300241}'
   score-for-blacklist: ${SCORE_FOR_BLACK_LIST:620}
-  badrate-for-blacklist: ${BADRATE_FOR_BLACK_LIST:52}
+  badrate-for-blacklist: ${BADRATE_FOR_BLACK_LIST:14}
 s3-storage:
   endpoint-url: '${S3_ENDPOINT_URL:https://object.pscloud.io}'
   access-key: '${S3_ACCESS_KEY:MTTZXDH2CQVD07UHABOE}'

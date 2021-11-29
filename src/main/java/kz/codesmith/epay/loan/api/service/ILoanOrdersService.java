@@ -93,7 +93,7 @@ public interface ILoanOrdersService {
 
   void updateLoanOrderIdentityMatchResult(Integer orderId, Double result);
 
-  List<OrderDto> findAllOpenLoansByIin(String clientIin);
+  List<OrderDto> findAllOpenAlternativeLoansByIin(String clientIin);
 
   OrderDto updateScoringInfoAndEffectiveRateValues(
       Integer orderId,

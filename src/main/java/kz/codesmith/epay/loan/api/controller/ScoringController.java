@@ -103,6 +103,12 @@ public class ScoringController {
         )
     );
     context.setRequestData(request);
+    List<OrderDto> orderDtos = ordersServices
+        .findAllOpenAlternativeLoansByIin(context.getRequestData().getIin());
+
+    if (!CollectionUtils.isEmpty(orderDtos)) {
+      return getRejectOrderResponse(order, "Need to repay issued alternative loans");
+    }
     request.setWhiteList(Stream.of(iinWhiteList.split(","))
         .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
 

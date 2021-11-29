@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.orders.OrderType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -86,4 +87,8 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
   List<OrderEntity> findAllByParentOrderIdAndClientId(Integer parentId, Integer clientId);
 
   List<OrderEntity> findAllByIinAndStatusIn(String iin, List<OrderState> states);
+
+  List<OrderEntity> findAllByIinAndStatusInAndOrderType(String iin,
+      List<OrderState> states,
+      OrderType orderType);
 }

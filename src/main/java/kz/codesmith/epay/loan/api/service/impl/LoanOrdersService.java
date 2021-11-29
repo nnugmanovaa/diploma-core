@@ -445,11 +445,11 @@ public class LoanOrdersService implements ILoanOrdersService {
   }
 
   @Override
-  public List<OrderDto> findAllOpenLoansByIin(String clientIin) {
+  public List<OrderDto> findAllOpenAlternativeLoansByIin(String clientIin) {
     List<OrderState> states = Arrays
         .asList(OrderState.CASHED_OUT_WALLET, OrderState.CASHED_OUT_CARD);
     return loanOrdersRepository
-        .findAllByIinAndStatusIn(clientIin, states)
+        .findAllByIinAndStatusInAndOrderType(clientIin, states, OrderType.ALTERNATIVE)
         .stream()
         .map(o -> mapper.map(o, OrderDto.class))
         .collect(Collectors.toList());
