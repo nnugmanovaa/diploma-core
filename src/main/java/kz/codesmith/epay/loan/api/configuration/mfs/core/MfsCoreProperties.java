@@ -54,4 +54,15 @@ public class MfsCoreProperties {
   @NotBlank
   private String initTopUpUrl;
 
+  @NotBlank
+  private String returnPaymentUrl;
+
+  @NotBlank
+  private String regularServiceId;
+
+  @NotBlank
+  private String earlyPartialServiceId;
+
+  @NotBlank
+  private String earlyFullServiceId;
 }

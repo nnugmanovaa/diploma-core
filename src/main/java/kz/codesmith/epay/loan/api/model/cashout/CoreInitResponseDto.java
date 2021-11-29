@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CashoutInitResponseDto {
+public class CoreInitResponseDto {
   private CoreOrderState state;
   private IdAndTimeKey order;
 }

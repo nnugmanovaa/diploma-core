@@ -3,16 +3,18 @@ package kz.codesmith.epay.loan.api.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeFactory;
 import kz.codesmith.epay.core.shared.model.analyzes.LoanPaymentErrorDto;
+import kz.codesmith.epay.core.shared.model.services.FieldType;
+import kz.codesmith.epay.core.shared.model.services.ServiceField;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
-import kz.codesmith.epay.loan.api.model.cashout.InitClientWalletTopUpDirectDto;
 import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
+import kz.codesmith.epay.loan.api.model.core.CorePaymentReturnDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.payment.ILoanPayment;
@@ -22,6 +24,7 @@ import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
 import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
+import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.telegram.gw.controller.ITelegramBotController;
 import kz.integracia.Contract;
@@ -35,7 +38,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.common.util.CollectionUtils;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -56,7 +58,8 @@ public class LoanRabbitBusReceiver {
   private final SiteExchangePortType siteExchangePortType;
   private final PaymentServicesPortType servicesPortType;
   private final RabbitTemplate rabbitTemplate;
-  private final CoreTopUpService topUpService;
+  private final CoreReturnService returnService;
+  private final IMessageService messageService;
 
   public static final String SUCCESS_RESPONSE_RESULT = "0";
   public static final String ORIGIN_EXCHANGE_HEADER = "x-first-death-exchange";
@@ -130,24 +133,35 @@ public class LoanRabbitBusReceiver {
   public void initCashoutForRemain(PaymentAppEntityEventDto entityEventDto) {
     try {
       Contract checkContract = entityEventDto.getContract();
-      if (checkContract.getAmountOfDebt().compareTo(entityEventDto.getPayment()
-          .getData().getSum()) != -1) {
+      if (checkContract.getAmountOfDebt().compareTo(entityEventDto.getExpectedAmount()) != -1) {
         log.info("No need to cashout");
       } else {
         log.info("Init cashout");
-        InitClientWalletTopUpDirectDto topUpDto = InitClientWalletTopUpDirectDto.builder()
-            .iin(entityEventDto.getIin())
-            .amount((entityEventDto.getPayment().getData().getSum()
-                .subtract(checkContract.getAmountOfDebt())).doubleValue())
-            .description("Excessive amount for credit payment")
-            .extRefOrderIdValue(entityEventDto.getExtRefId())
-            .extRefOrderTimeValue(new Date())
-            .operation(CoreTopUpService.CORE_TOPUP_OPERATION_NAME)
+        Double billAmount = (entityEventDto.getExpectedAmount()
+            .subtract(checkContract.getAmountOfDebt())).doubleValue();
+
+        ServiceField account = ServiceField.builder()
+            .name("account")
+            .value(entityEventDto.getPayment()
+                .getData()
+                .getAccount())
+            .type(FieldType.STRING)
             .build();
-        topUpService.initClientTopUpDirect(topUpDto);
+
+        log.info("Init returning");
+        CorePaymentReturnDto returnDto = CorePaymentReturnDto.builder()
+            .fields(new ArrayList<>())
+            .billAmount(-billAmount)
+            .servicesId(entityEventDto.getServiceId())
+            .clientName(entityEventDto.getMsisdn())
+            .fields(Collections.singletonList(account))
+            .build();
+
+        log.info("Calling returning process");
+        returnService.initReturnPayment(returnDto);
       }
     } catch (Exception e) {
-      log.error("Error while cashout");
+      log.error("Error while cashout", e);
     }
   }
 
@@ -170,9 +184,9 @@ public class LoanRabbitBusReceiver {
         log.info("Order status updated for orderId={}, set={}",
             orderDto.getOrderId(), OrderState.CLOSED);
         if (entityEventDto != null) {
+          entityEventDto.setMsisdn(orderDto.getMsisdn());
           entityEventDto.setExtRefId(String.valueOf(orderDto.getOrderId()));
-          rabbitTemplate.convertAndSend(AmqpConfig.CASHOUT_PAYMENT_EXCHANGE_NAME,
-              AmqpConfig.CASHOUT_ROUTING_KEY, entityEventDto);
+          messageService.fireCashoutEvent(entityEventDto, AmqpConfig.CASHOUT_ROUTING_KEY);
         }
         break;
       }
@@ -284,7 +298,7 @@ public class LoanRabbitBusReceiver {
   private List<OrderDto> getClientOpenLoans(String iin) {
     return loanOrdersRepository
         .findAllByIinAndStatusIn(iin, Arrays
-            .asList(OrderState.CASHED_OUT_CARD, OrderState.CASHED_OUT_WALLET, OrderState.CLOSED))
+            .asList(OrderState.CASHED_OUT_CARD, OrderState.CASHED_OUT_WALLET))
         .stream()
         .map(o -> mapper.map(o, OrderDto.class))
         .collect(Collectors.toList());

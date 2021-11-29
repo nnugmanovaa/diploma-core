@@ -13,4 +13,6 @@ public interface IMessageService {
   void fireLoanStatusGetEvent(PaymentAppEntityEventDto eventDto, String routingKey);
 
   void fireLoanPaymentEvent(LoanWsPaymentDto loanPaymentDto, String routingKey);
+
+  void fireCashoutEvent(PaymentAppEntityEventDto loanPaymentDto, String routingKey);
 }

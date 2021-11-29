@@ -1,11 +1,14 @@
-package kz.codesmith.epay.loan.api.model.cashout;
+package kz.codesmith.epay.loan.api.model.core;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.Date;
+import java.util.List;
+import javax.validation.constraints.Negative;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import kz.codesmith.epay.core.shared.model.services.ServiceField;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,22 +19,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonInclude(Include.NON_NULL)
 @Builder
-public class InitClientWalletTopUpDirectDto {
-
-  @NotBlank
-  private String iin;
+public class CorePaymentReturnDto {
 
   @NotBlank
   private String clientName;
 
   @NotNull
-  private Double amount;
+  @Negative
+  private Double billAmount;
+
+  @NotNull
+  private Integer servicesId;
 
   @NotBlank
-  private String description;
-
-  @NotBlank
-  private String operation;
+  private List<ServiceField> fields;
 
   @NotBlank
   private String extRefOrderIdValue;

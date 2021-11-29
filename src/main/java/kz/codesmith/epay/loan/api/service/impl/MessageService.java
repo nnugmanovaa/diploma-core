@@ -7,6 +7,7 @@ import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.logger.Logged;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,4 +40,11 @@ public class MessageService implements IMessageService {
     rabbitTemplate
         .convertAndSend(AmqpConfig.LOAN_PAYMENT_EXCHANGE_NAME, routingKey, loanPaymentDto);
   }
+
+  @Override
+  public void fireCashoutEvent(PaymentAppEntityEventDto loanPaymentDto, String routingKey) {
+    rabbitTemplate
+        .convertAndSend(AmqpConfig.CASHOUT_PAYMENT_EXCHANGE_NAME, routingKey, loanPaymentDto);
+  }
+
 }

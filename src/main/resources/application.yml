@@ -18,6 +18,7 @@ spring:
       minimum-idle: ${DB_POOL_MIN_IDLE:5}
   flyway:
     schemas: 'loan'
+    out-of-order: true
   redis:
     host: ${REDIS_HOST:localhost}
     timeout: 2000
@@ -94,6 +95,10 @@ integration:
     agent-name: ${INTEGRATION_MFS_CORE_AGENT_USERNAME:agent_1000_user}
     agent-password: ${INTEGRATION_MFS_CORE_AGENT_PASSWORD:q}
     init-top-up-url: ${INTEGRATION_MFS_CORE_TOP_UP_URL:/agent/wallets/topup/direct}
+    return-payment-url: ${INTEGRATION_MFS_CORE_REVERSE_PAYMENT_URL:/agent/payments/init/buy/reverse}
+    regular-service-id: ${INTEGRATION_MFS_CORE_REGULAR_SERVICE_ID:1000}
+    early-partial-service-id: ${INTEGRATION_MFS_CORE_EARLY_PARTIAL_SERVICE_ID:1001}
+    early-full-service-id: ${INTEGRATION_MFS_CORE_EARLY_FULL_SERVICE_ID:1002}
   halyk:
     password: '${INTEGRATION_HALYK_CERT_PASSWORD:nissan}'
     certificate: '${INTEGRATION_HALYK_CERTIFICATE:classpath:halyk/certificate.jks}'
