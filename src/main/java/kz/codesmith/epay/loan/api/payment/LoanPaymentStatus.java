@@ -2,5 +2,6 @@ package kz.codesmith.epay.loan.api.payment;
 
 public enum LoanPaymentStatus {
   SUCCESS,
-  ERROR
+  ERROR,
+  IN_PROCESS
 }

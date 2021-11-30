@@ -91,4 +91,32 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
   List<OrderEntity> findAllByIinAndStatusInAndOrderType(String iin,
       List<OrderState> states,
       OrderType orderType);
+
+  @Query("select o from OrderEntity o "
+      + "where ((:orderId IS NULL) OR o.orderId = :orderId) "
+      + "and o.insertedTime between :startTime and :endTime "
+      + "and o.status in (:states) "
+  )
+  Page<OrderEntity> findAllByInsertedTimeIsBetweenAndStatus(
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      Integer orderId,
+      List<OrderState> states,
+      Pageable pageRequest
+  );
+
+  @Query("select o from OrderEntity o "
+      + "where ((:orderId IS NULL) OR o.orderId = :orderId) "
+      + "and o.insertedTime between :startTime and :endTime "
+      + "and o.clientId = :clientId "
+      + "and o.status in (:statuses) "
+  )
+  Page<OrderEntity> findAllByInsertedTimeIsBetweenAndClientAndStatus(
+      LocalDateTime startTime,
+      LocalDateTime endTime,
+      Integer clientId,
+      Integer orderId,
+      List<OrderState> statuses,
+      Pageable pageRequest
+  );
 }

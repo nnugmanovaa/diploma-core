@@ -4,10 +4,12 @@ import io.swagger.annotations.ApiOperation;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.core.shared.controller.qualifier.ApiPageable;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
+import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IReportExcelService;
 import kz.codesmith.epay.loan.api.service.IReportService;
@@ -65,12 +67,14 @@ public class LoanOrdersController {
       @RequestParam @NotNull @DateTimeFormat(iso = ISO.DATE) LocalDate startDate,
       @RequestParam @NotNull @DateTimeFormat(iso = ISO.DATE) LocalDate endDate,
       @RequestParam(required = false) Integer orderId,
+      @RequestParam(required = false) List<OrderState> states,
       @ApiIgnore Pageable pageRequest
   ) {
     return ResponseEntity.ok(ordersServices.getOrdersByUserOwner(
         startDate,
         endDate,
         orderId,
+        states,
         pageRequest
     ));
   }

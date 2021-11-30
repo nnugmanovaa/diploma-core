@@ -23,9 +23,9 @@ import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountResponse;
 import kz.codesmith.epay.loan.api.payment.dto.LoanInfoDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
+import kz.codesmith.epay.loan.api.payment.dto.LoanStatusDto;
 import kz.codesmith.epay.loan.api.payment.dto.OrderInitDto;
 import kz.codesmith.epay.loan.api.payment.services.LoanPaymentServices;
-import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.service.IAcquiringService;
 import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
@@ -190,19 +190,31 @@ public class LoanPaymentImpl implements ILoanPayment {
     LocalDate plannedPaymentDate = LocalDate
         .parse(loanInfoDto.getPlannedPaymentDate(), DATE_TIME_FORMATTER);
     if (!loanInfoDto.getArrears().equals(zero)) {
-      loanInfoDto.setLoanStatus(LoanStatus.EXPIRED);
+      loanInfoDto.setLoanStatus(LoanStatusDto.builder()
+              .loanStatus(LoanStatus.EXPIRED)
+              .description(LoanStatus.EXPIRED.getDescription())
+          .build());
       return loanInfoDto;
     }
     if (plannedPaymentDate.minusMonths(1).isAfter(LocalDate.now())) {
-      loanInfoDto.setLoanStatus(LoanStatus.PAID);
+      loanInfoDto.setLoanStatus(LoanStatusDto.builder()
+          .loanStatus(LoanStatus.PAID)
+          .description(LoanStatus.PAID.getDescription())
+          .build());
       return loanInfoDto;
     }
     if (plannedPaymentDate.isAfter(LocalDate.now())
         && !loanInfoDto.getPlannedPaymentAmount().equals(zero)) {
-      loanInfoDto.setLoanStatus(LoanStatus.PENDING);
+      loanInfoDto.setLoanStatus(LoanStatusDto.builder()
+          .loanStatus(LoanStatus.PENDING)
+          .description(LoanStatus.PENDING.getDescription())
+          .build());
       return loanInfoDto;
     }
-    loanInfoDto.setLoanStatus(LoanStatus.ACTIVE);
+    loanInfoDto.setLoanStatus(LoanStatusDto.builder()
+        .loanStatus(LoanStatus.ACTIVE)
+        .description(LoanStatus.ACTIVE.getDescription())
+        .build());
     return loanInfoDto;
   }
 

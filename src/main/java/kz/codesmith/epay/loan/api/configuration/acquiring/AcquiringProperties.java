@@ -37,4 +37,7 @@ public class AcquiringProperties {
   @NotBlank
   private String errorReturnUrl;
 
+  private String callbackSuccessUrl;
+
+  private String callbackErrorUrl;
 }

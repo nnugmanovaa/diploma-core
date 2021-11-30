@@ -41,7 +41,7 @@ public class AcquiringService implements IAcquiringService {
 
   private final PaymentRepository paymentRepository;
   private final AcquiringProperties acquiringProperties;
-  private final IMessageService acquiringMessageService;
+  private final IMessageService messageService;
   private final IPaymentService paymentService;
   private final AcquiringRs acquiringRs;
   private final ObjectMapper objectMapper;
@@ -62,10 +62,13 @@ public class AcquiringService implements IAcquiringService {
         OrderSummaryDto paymentInitResponse = objectMapper
             .readValue(response.readEntity(String.class), OrderSummaryDto.class);
 
+        if (paymentInitResponse.getState().equals(AcquiringOrderState.NEW)) {
+          outPaymentResponse.setStatus(AcquiringBaseStatus.NEW);
+          outPaymentResponse.setUrl(paymentInitResponse.getPaymentUrl());
+        } else {
+          outPaymentResponse.setStatus(AcquiringBaseStatus.ERROR);
+        }
         outPaymentResponse.setMessage(paymentInitResponse.getMessage());
-        outPaymentResponse.setStatus(AcquiringBaseStatus.SUCCESS);
-        outPaymentResponse.setUrl(paymentInitResponse.getPaymentUrl());
-
         paymentEntity.setExtRefId(paymentInitResponse.getOrdersId());
         paymentEntity.setExtRefTime(paymentInitResponse.getOrderDate().atStartOfDay());
         paymentEntity.setExtUuid(paymentInitResponse.getUuid());
@@ -161,11 +164,13 @@ public class AcquiringService implements IAcquiringService {
         AcquiringStatusResponse paymentStatusResponse = getPaymentStatus(orderId);
 
         if (paymentStatusResponse.getStatus() == AcquiringBaseStatus.SUCCESS) {
-          acquiringMessageService
+          paymentEntity.setInitPaymentStatus(AcquiringBaseStatus.SUCCESS);
+          messageService
               .firePayEvent(modelMapper.map(paymentEntity, LoanPaymentRequestDto.class),
                   AmqpConfig.PAYMENT_SEND_ROUTING_KEY);
 
           outNotificationResponse.setStatus(AcquiringBaseStatus.SUCCESS);
+          paymentRepository.save(paymentEntity);
         } else {
           outNotificationResponse.setStatus(paymentStatusResponse.getStatus());
           outNotificationResponse.setMessage(LoanPaymentConstants.MESSAGE_BAD_STATUS_RESPONSE);

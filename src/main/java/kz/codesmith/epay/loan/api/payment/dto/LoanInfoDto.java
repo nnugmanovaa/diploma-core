@@ -19,5 +19,5 @@ public class LoanInfoDto {
   private String plannedPaymentDate;
   private BigDecimal plannedPaymentAmount;
   private BigDecimal minimumAmountOfPartialRepayment;
-  private LoanStatus loanStatus;
+  private LoanStatusDto loanStatus;
 }

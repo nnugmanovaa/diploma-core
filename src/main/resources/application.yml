@@ -83,10 +83,14 @@ integration:
     url: ${INTEGRATION_MFS_CORE_URL:https://api-stage.pitech.kz/api}
     username: ${INTEGRATION_MFS_CORE_USERNAME:operator_1000_user}
     password: ${INTEGRATION_MFS_CORE_PASSWORD:q}
+    agentTopUsername: ${INTEGRATION_MFS_CORE_AGEMT_TOP_USERNAME:agent_1000_user}
+    agentTopPassword: ${INTEGRATION_MFS_CORE_AGENT_TOP_PASSWORD:q}
     service-timeout: ${INTEGRATION_MFS_CORE_SERVICE_TIMEOUT:240000}
     signin-url: ${INTEGRATION_MFS_CORE_SIGNIN_URL:/auth/signin}
     get-user-url: ${INTEGRATION_MFS_CORE_GET_USER_URL:/admin/users}
     get-client-url: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:/admin/clients/by-clientname}
+    get-payment-url: ${INTEGRATION_MFS_CORE_AGENT_PAYMENT_URL:/agent/payments}
+    clientsProfileUrl: ${INTEGRATION_MFS_CORE_CLIENTS_PROFILE_URL:/clients/profile}
     agent-name: ${INTEGRATION_MFS_CORE_AGENT_USERNAME:agent_1000_user}
     agent-password: ${INTEGRATION_MFS_CORE_AGENT_PASSWORD:q}
     init-top-up-url: ${INTEGRATION_MFS_CORE_TOP_UP_URL:/agent/wallets/topup/direct}
@@ -112,6 +116,8 @@ integration:
     paymentUrl: ${INTEGRATION_ACQUIRING_PAYMENT_URL:http://cards-stage.pitech.kz/gw/payments/cards/charge}
     successReturnUrl: ${INTEGRATION_ACQUIRING_SUCCESS_RETURN_URL:https://money-stage.pitech.kz/topup?status=success&orderId=}
     errorReturnUrl: ${INTEGRATION_ACQUIRING_ERROR_RETURN_URL:https://money-stage.pitech.kz/topup?status=error&orderId=}
+    callbackSuccessUrl: ${ACQUIRING_SUCCESS_CALLBACK_URL:http://localhost:8083/api/acquiring/callback}
+    callbackErrorUrl: ${ACQUIRING_ERROR_CALLBACK_URL:http://localhost:8083/api/acquiring/callback}
   mfo-app:
     url: ${MFO_PITECH_GW_URL:http://mfo.payintech.kz/DEMO_MFO_pintech/ws/PaymentServices.1cws}
     username: ${INTEGRATION_ONEC_USERNAME:ws_pitech}

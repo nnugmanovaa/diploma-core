@@ -58,6 +58,9 @@ public class PaymentEntity {
   @Column(name = "client_ref")
   private String clientRef;
 
+  @Column(name = "clients_id")
+  private Integer clientsId;
+
   @Column(name = "currency")
   private String currency;
 
@@ -97,6 +100,9 @@ public class PaymentEntity {
 
   @Column(name = "updated_time")
   private LocalDateTime updatedTime;
+
+  @Column(name = "mfo_order_time")
+  private LocalDateTime mfoOrderTime;
 
   @PrePersist
   public void toCreate() {

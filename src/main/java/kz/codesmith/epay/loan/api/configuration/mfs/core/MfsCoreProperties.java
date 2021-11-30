@@ -22,6 +22,12 @@ public class MfsCoreProperties {
   @NotBlank
   private String password;
 
+  @NotBlank
+  private String agentTopUsername;
+
+  @NotBlank
+  private String agentTopPassword;
+
   @NotNull
   private Long serviceTimeout;
 
@@ -34,6 +40,11 @@ public class MfsCoreProperties {
   @NotBlank
   private String getClientUrl;
 
+  @NotBlank
+  private String getPaymentUrl;
+
+  @NotBlank
+  private String clientsProfileUrl;
   @NotBlank
   private String agentName;
 

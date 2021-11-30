@@ -17,7 +17,7 @@ public enum AcquiringOrderState {
   TIMED_OUT("Timeout при проведении платежа"),
   WAIT_CVC("В ожидании CVC-кода"),
   AUTH_OK("Сумма успешно авторизована"),
-  EXPIRED("Истёк срок проведения платежа");
-
+  EXPIRED("Истёк срок проведения платежа"),
+  IN_PROCESS("В процессе");
   private String description;
 }

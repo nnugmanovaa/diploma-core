@@ -53,4 +53,9 @@ public class PaymentDto {
 
   private Map<String, Object> payload = new HashMap<>();
 
+  @URL
+  private String callbackSuccessUrl;
+
+  @URL
+  private String callbackErrorUrl;
 }
