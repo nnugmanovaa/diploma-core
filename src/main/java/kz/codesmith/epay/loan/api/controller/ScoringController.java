@@ -312,7 +312,7 @@ public class ScoringController {
         .map(o -> ScoringResponse.builder()
             .orderId(o.getOrderId())
             .orderTime(o.getInsertedTime())
-            .rejectText(o.getRejectReason())
+            .rejectText(o.getScoringRejectReason())
             .result(getScoreResult(o))
             .alternativeChoices(ordersServices.getAlternativeChoices(o))
             .build())

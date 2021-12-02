@@ -2,6 +2,7 @@ package kz.codesmith.epay.loan.api.model.orders;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -67,7 +68,8 @@ public class OrderDto extends AbstractDto {
 
   private LocalDateTime contractExtRefTime;
 
-  private String rejectReason;
+  @JsonProperty("rejectReason")
+  private String scoringRejectReason;
 
   private String preScoreRequestId;
 
