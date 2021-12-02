@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
+import java.util.Objects;
 import kz.codesmith.epay.loan.api.annotation.SpringRequirement;
 import kz.codesmith.epay.loan.api.configuration.PkbConnectorProperties;
 import kz.codesmith.epay.loan.api.model.exception.PkbRequestFailedException;
@@ -64,6 +65,11 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
           requestData.getPersonalInfo().getLastName(),
           requestData.getPersonalInfo().getMiddleName()
       );
+    }
+
+    if (Objects.nonNull(report.getErrorCode()) && "4".equals(report.getErrorCode())) {
+      log.info("PKB kdn response {}", report.getErrorMessage());
+      return RequirementResult.failure(RejectionReason.KDN_INCOME_OR_DEBT_UNAVAILABLE);
     }
 
     if (report.getKdnScore() == null || report.getDebt() == null || report.getIncome() == null) {

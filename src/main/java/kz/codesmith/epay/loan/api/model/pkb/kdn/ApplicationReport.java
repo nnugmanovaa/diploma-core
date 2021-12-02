@@ -17,4 +17,6 @@ public class ApplicationReport implements Serializable {
   private Double debt;
   private Double income;
   private IncomesResultCrtrV2 incomesResultCrtrV2;
+  private String errorCode;
+  private String errorMessage;
 }

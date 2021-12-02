@@ -27,4 +27,6 @@ public class ApplicationReportDto implements Serializable {
   private ReportCrtrV2Dto incomesResultCrtrV2;
   private String flag1;
   private String flag2;
+  private String errorCode;
+  private String errorMessage;
 }
