@@ -121,6 +121,13 @@ public class PaymentService implements IPaymentService {
   }
 
   @Override
+  public Page<LoanPaymentDto> getLoanPaymentsByLoanOrderId(Pageable pageable,
+                                                           Integer loanOrderId) {
+    return paymentRepository.findByLoanOrderId(pageable, loanOrderId)
+        .map(this::convertToDto);
+  }
+
+  @Override
   public Page<LoanPaymentDto> getLoanPaymentsByOwner(LocalDate startDate, LocalDate endDate,
       List<MfoProcessingStatus> statuses, Pageable pageRequest) {
     if (CollectionUtils.isEmpty(statuses)) {

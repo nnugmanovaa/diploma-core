@@ -45,6 +45,13 @@ public class LoanPaymentController {
   private final ILoanPayment loanPayment;
   private final IPaymentService paymentService;
 
+  @GetMapping("/loan-payments")
+  public ResponseEntity<Page<LoanPaymentDto>> getLoanPaymentsByLoanOrderId(
+      @RequestParam @NotNull Integer loanOrderId,
+      @ApiIgnore Pageable pageable) {
+    return ResponseEntity.ok(paymentService.getLoanPaymentsByLoanOrderId(pageable, loanOrderId));
+  }
+
   @ApiOperation(
       value = "retrieves all active loans by iin",
       produces = MediaType.APPLICATION_JSON_VALUE

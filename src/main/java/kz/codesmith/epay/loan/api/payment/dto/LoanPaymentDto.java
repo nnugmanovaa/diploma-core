@@ -10,6 +10,7 @@ import kz.codesmith.epay.loan.api.model.acquiring.MfoProcessingStatus;
 import kz.codesmith.epay.loan.api.payment.LoanRepayType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -44,6 +45,9 @@ public class LoanPaymentDto {
   private Integer clientsId;
 
   private String mfoOrderTime;
+
+  @Default
+  private Integer remainAmount = 0;
 
   @JsonView(Views.Internal.class)
   private Map<String, Object> initPaymentResponse;

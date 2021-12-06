@@ -24,6 +24,8 @@ public interface IPaymentService {
 
   PaymentEntity getPayment(Integer paymentId);
 
+  Page<LoanPaymentDto> getLoanPaymentsByLoanOrderId(Pageable pageable, Integer loanOrderId);
+
   Page<LoanPaymentDto> getLoanPaymentsByOwner(LocalDate startDate,
       LocalDate endDate,
       List<MfoProcessingStatus> statuses,
