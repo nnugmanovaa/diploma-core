@@ -1,0 +1,1 @@
+ALTER TABLE loan.loan_payments ADD COLUMN loan_order_id INTEGER;

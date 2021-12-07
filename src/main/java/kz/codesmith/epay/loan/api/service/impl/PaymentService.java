@@ -8,6 +8,7 @@ import java.util.List;
 import kz.codesmith.epay.core.shared.model.OwnerType;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
+import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringOrderState;
 import kz.codesmith.epay.loan.api.model.acquiring.MfoProcessingStatus;
@@ -17,6 +18,7 @@ import kz.codesmith.epay.loan.api.payment.LoanRepayType;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
 import kz.codesmith.epay.loan.api.payment.dto.OrderInitDto;
+import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.repository.PaymentRepository;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.security.model.UserContextHolder;
@@ -37,6 +39,8 @@ public class PaymentService implements IPaymentService {
   private final PaymentRepository paymentRepository;
   private final UserContextHolder userContextHolder;
   private final ObjectMapper objectMapper;
+  private final LoanOrdersRepository loanOrdersRepository;
+
 
   @Override
   @Transactional
@@ -71,6 +75,12 @@ public class PaymentService implements IPaymentService {
     payment.setDescription(LoanPaymentConstants.LOAN_PAYMENT_INIT_DESCRIPTION);
     payment.setCurrency(LoanPaymentConstants.KZT_PAYMENT_CURRENCY);
     payment.setClientsId(userContextHolder.getContext().getOwnerId());
+    OrderEntity orderEntity = loanOrdersRepository.findByOrderExtRefId(
+        orderDto.getContractNumber())
+        .orElseThrow(() -> new NotFoundApiServerException(
+            ApiErrorTypeParamValues.ORDER
+        ));
+    payment.setLoanOrderId(orderEntity.getOrderId());
     return paymentRepository.save(payment);
   }
 
@@ -90,6 +100,14 @@ public class PaymentService implements IPaymentService {
         .intValue()));
     payment.setDescription(LoanPaymentConstants.LOAN_PAYMENT_INIT_DESCRIPTION);
     payment.setCurrency(LoanPaymentConstants.KZT_PAYMENT_CURRENCY);
+    OrderEntity orderEntity = loanOrdersRepository.findByOrderExtRefId(
+        paymentApp
+            .getData()
+            .getContractNumber())
+        .orElseThrow(() -> new NotFoundApiServerException(
+            ApiErrorTypeParamValues.ORDER
+        ));
+    payment.setLoanOrderId(orderEntity.getOrderId());
     return paymentRepository.save(payment);
   }
 

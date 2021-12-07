@@ -104,6 +104,9 @@ public class PaymentEntity {
   @Column(name = "mfo_order_time")
   private LocalDateTime mfoOrderTime;
 
+  @Column(name = "loan_order_id")
+  private Integer loanOrderId;
+
   @PrePersist
   public void toCreate() {
     setInsertedTime(Utils.now());
