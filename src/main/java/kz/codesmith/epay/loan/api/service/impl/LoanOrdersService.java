@@ -94,8 +94,8 @@ public class LoanOrdersService implements ILoanOrdersService {
         return loanOrdersRepository.findAllByInsertedTimeIsBetweenAndClientAndState(
                 startDate.atStartOfDay(),
                 endDate.atTime(LocalTime.MAX),
-                currentUserContext.getOwnerId(),
                 orderId,
+                currentUserContext.getOwnerId(),
                 states,
                 pageRequest
         ).map(o -> mapper.map(o, OrderDto.class));
