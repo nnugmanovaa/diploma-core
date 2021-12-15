@@ -17,7 +17,7 @@ import org.springframework.stereotype.Repository;
 public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer> {
   Optional<OrderEntity> findByOrderIdAndClientId(Integer orderId, Integer clientId);
 
-  Optional<OrderEntity> findByOrderExtRefId(String orderExtRefId);
+  Optional<OrderEntity> findByContractExtRefId(String contractExtRefId);
 
   @Query("select o from OrderEntity o "
       + "where ((:orderId IS NULL) OR o.orderId = :orderId) "

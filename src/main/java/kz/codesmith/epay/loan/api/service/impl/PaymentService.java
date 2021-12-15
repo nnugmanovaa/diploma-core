@@ -75,7 +75,7 @@ public class PaymentService implements IPaymentService {
     payment.setDescription(LoanPaymentConstants.LOAN_PAYMENT_INIT_DESCRIPTION);
     payment.setCurrency(LoanPaymentConstants.KZT_PAYMENT_CURRENCY);
     payment.setClientsId(userContextHolder.getContext().getOwnerId());
-    OrderEntity orderEntity = loanOrdersRepository.findByOrderExtRefId(
+    OrderEntity orderEntity = loanOrdersRepository.findByContractExtRefId(
         orderDto.getContractNumber())
         .orElseThrow(() -> new NotFoundApiServerException(
             ApiErrorTypeParamValues.ORDER
@@ -100,7 +100,7 @@ public class PaymentService implements IPaymentService {
         .intValue()));
     payment.setDescription(LoanPaymentConstants.LOAN_PAYMENT_INIT_DESCRIPTION);
     payment.setCurrency(LoanPaymentConstants.KZT_PAYMENT_CURRENCY);
-    OrderEntity orderEntity = loanOrdersRepository.findByOrderExtRefId(
+    OrderEntity orderEntity = loanOrdersRepository.findByContractExtRefId(
         paymentApp
             .getData()
             .getContractNumber())
