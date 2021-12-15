@@ -45,6 +45,7 @@ public class LoanPaymentController {
   private final ILoanPayment loanPayment;
   private final IPaymentService paymentService;
 
+  @PreAuthorize("hasAuthority('MFO_ADMIN')")
   @GetMapping("/loan-payments")
   public ResponseEntity<Page<LoanPaymentDto>> getLoanPaymentsByLoanOrderId(
       @RequestParam @NotNull Integer loanOrderId,
