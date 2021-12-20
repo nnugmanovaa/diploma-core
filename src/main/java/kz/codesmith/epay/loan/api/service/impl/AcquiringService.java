@@ -6,7 +6,9 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.ws.rs.core.Response;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorType;
@@ -201,6 +203,7 @@ public class AcquiringService implements IAcquiringService {
           messageService.fireLoanIinStatusGetEvent(paymentEntity.getClientRef(),
               AmqpConfig.LOAN_STATUSES_IIN_ROUTING_KEY);
 
+          checkInitPaymentResponse(orderDto, paymentEntity);
           outNotificationResponse.setStatus(AcquiringBaseStatus.SUCCESS);
           paymentRepository.save(paymentEntity);
         } else {
@@ -221,6 +224,18 @@ public class AcquiringService implements IAcquiringService {
     }
 
     return outNotificationResponse;
+  }
+
+  public void checkInitPaymentResponse(PaymentCallbackEventDto orderDto,
+      PaymentEntity paymentEntity) {
+    Map map = objectMapper.convertValue(
+        orderDto.getCard(),
+        Map.class
+    );
+    if (paymentEntity.getInitPaymentResponse() == null) {
+      paymentEntity.setInitPaymentResponse(new HashMap<String, Object>());
+    }
+    paymentEntity.getInitPaymentResponse().put("card", map);
   }
 
   @Override
