@@ -412,7 +412,9 @@ public class LoanOrdersService implements ILoanOrdersService {
         new TypeReference<>() {
         })
     );
-    order.setIncomesInfo(scoringInfo.getIncomesInfo());
+    if (Objects.nonNull(scoringInfo.getIncomesInfo())) {
+      order.setIncomesInfo(scoringInfo.getIncomesInfo());
+    }
     loanOrdersRepository.save(order);
     return mapper.map(order, OrderDto.class);
   }

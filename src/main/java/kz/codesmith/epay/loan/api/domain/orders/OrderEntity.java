@@ -151,7 +151,6 @@ public class OrderEntity {
 
   @Column(name = "incomes_info")
   @Type(type = "JsonMapDataType")
-  @NotNull
   private Map<String, Object> incomesInfo = new HashMap<>();
 
   @PrePersist
