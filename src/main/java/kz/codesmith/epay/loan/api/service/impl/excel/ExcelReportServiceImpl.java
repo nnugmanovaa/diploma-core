@@ -3,6 +3,7 @@ package kz.codesmith.epay.loan.api.service.impl.excel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderReportRecord;
@@ -48,7 +49,7 @@ public class ExcelReportServiceImpl implements IReportExcelService {
     ObjectMapper objectMapper = new ObjectMapper();
     Data data = objectMapper.convertValue(
         orderDto.getIncomesInfo(), Data.class);
-    return OrderReportRecord.builder()
+    OrderReportRecord record = OrderReportRecord.builder()
         .orderId(orderDto.getOrderId())
         .status(orderDto.getStatus())
         .insertedTime(orderDto.getInsertedTime())
@@ -64,9 +65,10 @@ public class ExcelReportServiceImpl implements IReportExcelService {
         .scoringInfo(objectMapper
             .convertValue(orderDto.getScoringInfo(), ScoringInfo.class))
         .scoringRejectionReason(orderDto.getScoringRejectReason())
-        .deductionsInfo(data
-            .getDeductionsDetailed())
         .build();
-
+    if (Objects.nonNull(data)) {
+      record.setDeductionsInfo(data.getDeductionsDetailed());
+    }
+    return record;
   }
 }

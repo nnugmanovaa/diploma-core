@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import kz.codesmith.epay.loan.api.model.orders.OrderReportRecord;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.model.pkb.kdn.DeductionsDetailed;
@@ -62,13 +63,15 @@ public class ExcelHelper {
         setRowColumnValue(dateRow, 25, source.get(i).getScoringInfo().getMaxPaymentSum());
         setRowColumnValue(dateRow, 26, source.get(i).getScoringInfo().getMaxContractSum());
         setRowColumnValue(dateRow, 27, source.get(i).getScoringRejectionReason());
-        List<DeductionsDetailed> list = source.get(i).getDeductionsInfo();
-        int size = list.size() > 5 ? 6 : list.size();
-        for (int k = 0; k < size; k++) {
-          setRowColumnValue(dateRow, k + 28, list.get(k).getAmount());
+        if (Objects.nonNull(source.get(i).getDeductionsInfo())) {
+          List<DeductionsDetailed> list = source.get(i).getDeductionsInfo();
+          int size = list.size() > 5 ? 6 : list.size();
+          for (int k = 0; k < size; k++) {
+            setRowColumnValue(dateRow, k + 28, list.get(k).getAmount());
+          }
         }
       }
-      for (int i = 0; i < 27; i++) {
+      for (int i = 0; i < 28; i++) {
         sheet.autoSizeColumn(i);
       }
       workbook.write(out);
