@@ -9,14 +9,22 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeFactory;
 import kz.codesmith.epay.core.shared.model.analyzes.LoanPaymentErrorDto;
+import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
+import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
 import kz.codesmith.epay.core.shared.model.services.FieldType;
 import kz.codesmith.epay.core.shared.model.services.ServiceField;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
+import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
+import kz.codesmith.epay.loan.api.model.acquiring.AcquiringOrderState;
+import kz.codesmith.epay.loan.api.model.acquiring.OrderSummaryDto;
+import kz.codesmith.epay.loan.api.model.cashout.InitClientWalletTopUpDirectDto;
 import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
 import kz.codesmith.epay.loan.api.model.core.CorePaymentReturnDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.payout.MfoPayoutDto;
+import kz.codesmith.epay.loan.api.model.payout.PayoutUpdateStateEventDto;
 import kz.codesmith.epay.loan.api.payment.ILoanPayment;
 import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.payment.LoanPaymentStatus;
@@ -24,6 +32,9 @@ import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
 import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
+import kz.codesmith.epay.loan.api.repository.PaymentRepository;
+import kz.codesmith.epay.loan.api.service.IAcquiringService;
+import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.telegram.gw.controller.ITelegramBotController;
@@ -60,6 +71,10 @@ public class LoanRabbitBusReceiver {
   private final RabbitTemplate rabbitTemplate;
   private final CoreReturnService returnService;
   private final IMessageService messageService;
+  private final CoreTopUpService topUpService;
+  private final IAcquiringService acquiringService;
+  private final ILoanOrdersService loanOrdersService;
+  private final PaymentRepository paymentRepository;
 
   public static final String SUCCESS_RESPONSE_RESULT = "0";
   public static final String ORIGIN_EXCHANGE_HEADER = "x-first-death-exchange";
@@ -163,6 +178,44 @@ public class LoanRabbitBusReceiver {
     } catch (Exception e) {
       log.error("Error while cashout", e);
     }
+  }
+
+  @Transactional
+  @RabbitListener(
+      queues = {AmqpConfig.PAYOUT_PAYMENT_QUEUE_NAME},
+      containerFactory = "jsaFactory",
+      group = "loan-api"
+  )
+  public void initPayoutPaymentStatusUpdate(PayoutUpdateStateEventDto eventDto) {
+    try {
+      OrderSummaryDto orderSummaryDto = acquiringService.getOrderStatus(
+          eventDto.getExtRefId(),
+          eventDto.getExtUuid(),
+          eventDto.getExtRefTime());
+      updateLoanPayoutOrderState(eventDto.getLoanOrderId(), orderSummaryDto.getState(), null);
+      PaymentEntity entity = paymentRepository.findById(eventDto.getPaymentId())
+          .orElseThrow(() -> new NotFoundApiServerException(
+              ApiErrorTypeParamValues.PAYMENT,
+              eventDto.getPaymentId()
+          ));
+      entity.setOrderState(orderSummaryDto.getState());
+      paymentRepository.save(entity);
+    } catch (Exception e) {
+      log.error("Error while payout status update", e);
+    }
+  }
+
+  @RabbitListener(
+      queues = {AmqpConfig.MFO_PAYOUT_QUEUE_NAME},
+      containerFactory = "jsaFactory",
+      group = "loan-api"
+  )
+  public void initPayoutPaymentStatusUpdate(MfoPayoutDto payoutDto) {
+    updateLoanPayoutOrderState(
+        payoutDto.getLoanOrderId(),
+        payoutDto.getOrderState(),
+        payoutDto.getBody()
+    );
   }
 
   private void updateLoanStatus(OrderDto orderDto, List<InformationTheAgreement> contracts,
@@ -320,4 +373,21 @@ public class LoanRabbitBusReceiver {
         .build();
   }
 
+  private void updateLoanPayoutOrderState(Integer orderId, AcquiringOrderState orderState,
+      String body) {
+    if (AcquiringOrderState.SUCCESS.equals(orderState)) {
+      loanOrdersService.updateLoanOrderPayoutResponseInfo(
+          orderId,
+          OrderState.CASHED_OUT_CARD,
+          body
+      );
+    } else if (LoanPaymentConstants.ACQUIRING_ERROR_STATUSES
+        .contains(orderState)) {
+      loanOrdersService.updateLoanOrderPayoutResponseInfo(
+          orderId,
+          OrderState.CASH_OUT_CARD_FAILED,
+          body
+      );
+    }
+  }
 }

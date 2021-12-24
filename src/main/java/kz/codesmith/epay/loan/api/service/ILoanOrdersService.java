@@ -106,4 +106,12 @@ public interface ILoanOrdersService {
       Float loanEffectiveRate,
       Float interestRate
   );
+
+  OrderDto updateLoanOrderPayoutResponseInfo(
+      Integer orderId,
+      OrderState status,
+      String body
+  );
+
+  List<OrderDto> getAllCashedOutInitializedOrders();
 }

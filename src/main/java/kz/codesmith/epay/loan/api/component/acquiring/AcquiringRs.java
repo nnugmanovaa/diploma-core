@@ -2,6 +2,7 @@ package kz.codesmith.epay.loan.api.component.acquiring;
 
 import java.time.LocalDate;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -9,16 +10,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import kz.codesmith.epay.loan.api.model.acquiring.AcquiringCardSaveDto;
 import kz.codesmith.epay.loan.api.model.acquiring.PaymentDto;
+import kz.codesmith.epay.loan.api.model.payout.PayoutRequestDto;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@Path("/gw/payments")
+@Path("/gw")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface AcquiringRs {
 
   @GET
-  @Path(value = "")
+  @Path(value = "/payments")
   Response getStatus(
       @QueryParam(value = "ordersId") String orderId,
       @QueryParam(value = "orderDate") LocalDate orderDate,
@@ -26,8 +29,32 @@ public interface AcquiringRs {
   );
 
   @POST
-  @Path(value = "/cards/charge")
+  @Path(value = "/payments/cards/charge")
   Response init(
       @RequestBody PaymentDto dto
+  );
+
+  @POST
+  @Path(value = "/payments/cards/payout")
+  Response payout(
+      @RequestBody PayoutRequestDto payoutRequestDto
+  );
+
+  @POST
+  @Path(value = "/cards/save")
+  Response saveCard(
+      @RequestBody AcquiringCardSaveDto cardSaveDto
+  );
+
+  @GET
+  @Path(value = "/cards")
+  Response getAllSavedCards(
+      @QueryParam(value = "extClientRef") String extClientRef
+  );
+
+  @DELETE
+  @Path(value = "/cards")
+  Response deleteSavedCard(
+      @QueryParam(value = "cardsId") String cardsId
   );
 }

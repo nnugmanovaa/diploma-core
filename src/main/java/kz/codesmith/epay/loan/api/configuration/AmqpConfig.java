@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainer
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 
 @Configuration
 public class AmqpConfig {
@@ -56,6 +57,16 @@ public class AmqpConfig {
   public static final String DLX_QUEUE_NAME = "queue-loan-dlx";
   public static final String LOAN_STATUS_DLX_QUEUE_NAME = "queue-loan-status-dlx";
   public static final String LOAN_STATUS_DLX_EXCHANGE_NAME = "loan-status-dlx-exchange";
+
+  public static final String PAYOUT_ROUTING_KEY = "client.payout-payment";
+  public static final String PAYOUT_PAYMENT_EXCHANGE_NAME = "payout-payment-exchange";
+  public static final String PAYOUT_PAYMENT_QUEUE_NAME = "queue-payout-payment";
+  public static final String PAYOUT_PAYMENT_ROUTING_KEY_TEMPLATE = "#.payout-payment";
+
+  public static final String MFO_PAYOUT_ROUTING_KEY = "client.payout-mfo";
+  public static final String MFO_PAYOUT_EXCHANGE_NAME = "payout-mfo-exchange";
+  public static final String MFO_PAYOUT_QUEUE_NAME = "queue-payout-mfo";
+  public static final String MFO_PAYOUT_ROUTING_KEY_TEMPLATE = "#.payout-mfo";
 
   @Value("${loan-status-delay}")
   private int loanStatusDelay;
@@ -213,6 +224,42 @@ public class AmqpConfig {
         .bind(cashOutPaymentQueue())
         .to(cashOutPaymentTopicExchange())
         .with(CASHOUT_PAYMENT_ROUTING_KEY_TEMPLATE);
+  }
+
+  @Bean
+  public TopicExchange payOutPaymentTopicExchange() {
+    return new TopicExchange(PAYOUT_PAYMENT_EXCHANGE_NAME);
+  }
+
+  @Bean
+  public Queue payOutPaymentQueue() {
+    return new Queue(PAYOUT_PAYMENT_QUEUE_NAME);
+  }
+
+  @Bean
+  public Binding bindingPayoutOutPaymentQueue() {
+    return BindingBuilder
+        .bind(payOutPaymentQueue())
+        .to(payOutPaymentTopicExchange())
+        .with(PAYOUT_PAYMENT_ROUTING_KEY_TEMPLATE);
+  }
+
+  @Bean
+  public TopicExchange mfoPayOutPaymentTopicExchange() {
+    return new TopicExchange(MFO_PAYOUT_EXCHANGE_NAME);
+  }
+
+  @Bean
+  public Queue mfoPayOutPaymentQueue() {
+    return new Queue(MFO_PAYOUT_QUEUE_NAME);
+  }
+
+  @Bean
+  public Binding bindingMfoPayoutOutPaymentQueue() {
+    return BindingBuilder
+        .bind(mfoPayOutPaymentQueue())
+        .to(mfoPayOutPaymentTopicExchange())
+        .with(MFO_PAYOUT_ROUTING_KEY_TEMPLATE);
   }
 
   @Bean

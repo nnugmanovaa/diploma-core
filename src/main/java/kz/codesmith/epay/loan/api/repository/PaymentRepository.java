@@ -17,6 +17,8 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Integer>
 
   Page<PaymentEntity> findByLoanOrderId(Pageable pageable, Integer loanOrderId);
 
+  Optional<PaymentEntity> findByLoanOrderId(Integer loanOrderId);
+
   @Query(value =
       "select p.paymentId, p.mfoProcessingMessage "
           + "from PaymentEntity as p "
@@ -50,4 +52,6 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Integer>
       @Param("mfoStatuses") List<MfoProcessingStatus> mfoStatuses,
       Pageable pageRequest
   );
+
+  List<PaymentEntity> findAllByLoanOrderIdIn(List<Integer> loanOrdersId);
 }

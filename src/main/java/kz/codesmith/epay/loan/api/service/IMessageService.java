@@ -1,6 +1,8 @@
 package kz.codesmith.epay.loan.api.service;
 
 import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
+import kz.codesmith.epay.loan.api.model.payout.MfoPayoutDto;
+import kz.codesmith.epay.loan.api.model.payout.PayoutUpdateStateEventDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 
@@ -15,4 +17,8 @@ public interface IMessageService {
   void fireLoanPaymentEvent(LoanWsPaymentDto loanPaymentDto, String routingKey);
 
   void fireCashoutEvent(PaymentAppEntityEventDto loanPaymentDto, String routingKey);
+
+  void firePayoutStatusUpdateEvent(PayoutUpdateStateEventDto eventDto, String routingKey);
+
+  void fireMfoPayoutStatusUpdateEvent(MfoPayoutDto mfoPayoutDto, String routingKey);
 }

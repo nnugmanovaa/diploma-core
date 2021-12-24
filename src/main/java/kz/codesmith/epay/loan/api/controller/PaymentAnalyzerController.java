@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiOperation;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.loan.api.service.IPaymentAnalyzerService;
+import kz.codesmith.epay.loan.api.service.IPayoutService;
 import kz.codesmith.epay.telegram.gw.controller.ITelegramBotController;
 import kz.codesmith.epay.telegram.gw.models.dto.LoanPaymentAnalyzerDto;
 import kz.codesmith.logger.Logged;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +32,7 @@ public class PaymentAnalyzerController {
 
   private final ITelegramBotController telegramBotController;
   private final IPaymentAnalyzerService paymentAnalyzerService;
+  private final IPayoutService payoutService;
 
   @ApiOperation(
       value = "retrieves all unprocessed payment within a specified period",
@@ -46,5 +49,14 @@ public class PaymentAnalyzerController {
       telegramBotController.sendLoanErrorPaymentsBetweenTime(loanPaymentAnalyzerDto);
     }
     return ResponseEntity.ok(loanPaymentAnalyzerDto);
+  }
+
+  @ApiOperation(
+      value = "Check payout status"
+  )
+  @PostMapping(path = "/payout/status")
+  public ResponseEntity<Void> checkPayoutStatuses() {
+    payoutService.checkPayoutStatuses();
+    return ResponseEntity.ok().build();
   }
 }

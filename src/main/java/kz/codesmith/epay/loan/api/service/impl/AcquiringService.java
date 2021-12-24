@@ -3,24 +3,33 @@ package kz.codesmith.epay.loan.api.service.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import javax.ws.rs.core.Response;
+import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorType;
+import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
 import kz.codesmith.epay.loan.api.component.acquiring.AcquiringRs;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
 import kz.codesmith.epay.loan.api.configuration.acquiring.AcquiringProperties;
 import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringBaseStatus;
+import kz.codesmith.epay.loan.api.model.acquiring.AcquiringCardSaveDto;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringNotificationRequest;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringNotificationResponse;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringOrderState;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringPaymentResponse;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringStatusResponse;
+import kz.codesmith.epay.loan.api.model.acquiring.CardSaveDto;
 import kz.codesmith.epay.loan.api.model.acquiring.OrderSummaryDto;
 import kz.codesmith.epay.loan.api.model.acquiring.PaymentCallbackEventDto;
 import kz.codesmith.epay.loan.api.model.acquiring.PaymentDto;
+import kz.codesmith.epay.loan.api.model.acquiring.SaveCardRequestDto;
+import kz.codesmith.epay.loan.api.model.exception.AcquiringProcessingException;
+import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.OrderInitDto;
@@ -90,7 +99,6 @@ public class AcquiringService implements IAcquiringService {
     }
 
     paymentEntity.setInitPaymentStatus(outPaymentResponse.getStatus());
-
     paymentRepository.save(paymentEntity);
     return outPaymentResponse;
   }
@@ -132,16 +140,37 @@ public class AcquiringService implements IAcquiringService {
           outStatusResponse.setMessage(orderState.getDescription());
         }
       } else {
+        log.error("Could not call acquiring get payment status, one of the params is null: "
+            + "extRefId:{}, extRefTime: {}, extUuid: {}", extRefId, extRefTime, extUuid);
         outStatusResponse.setMessage(LoanPaymentConstants.MESSAGE_UNEXPECTED_BEHAVIOUR);
         outStatusResponse.setStatus(AcquiringBaseStatus.ERROR);
       }
     } catch (Exception ex) {
-      log.error(LoanPaymentConstants.MESSAGE_DEFAULT_EXCEPTION, ex);
+      log.error("Error during acquring payment status call", ex);
       outStatusResponse.setMessage(ex.getMessage());
       outStatusResponse.setStatus(AcquiringBaseStatus.ERROR);
     }
 
     return outStatusResponse;
+  }
+
+  @Override
+  public OrderSummaryDto getOrderStatus(String extOrderId, String uuid, LocalDate extRefTime) {
+    try {
+      if (Objects.nonNull(extOrderId) && Objects.nonNull(uuid) && Objects.nonNull(extRefTime)) {
+        Response response = acquiringRs.getStatus(extOrderId, extRefTime, uuid);
+        if (response.getStatus() == 200) {
+          return objectMapper
+              .readValue(response.readEntity(String.class), OrderSummaryDto.class);
+        }
+      }
+      log.error("Could not call acquiring get payment status, one of the params is null: "
+          + "extRefId:{}, extRefTime: {}, extUuid: {}", extOrderId, extRefTime, uuid);
+    } catch (Exception e) {
+      log.error("Error during acquring payment status call", e);
+      throw new AcquiringProcessingException(e.getMessage());
+    }
+    throw new GeneralApiServerException(ApiErrorType.E500_INTERNAL_SERVER_ERROR);
   }
 
   @Override
@@ -189,6 +218,60 @@ public class AcquiringService implements IAcquiringService {
     }
 
     return outNotificationResponse;
+  }
+
+  @Override
+  public OrderSummaryDto saveCard(SaveCardRequestDto requestDto) {
+    AcquiringCardSaveDto cardSaveDto = AcquiringCardSaveDto.builder()
+        .amount(requestDto.getAmount())
+        .currency(LoanPaymentConstants.KZT_PAYMENT_CURRENCY)
+        .errorReturnUrl(requestDto.getErrorReturnUrl())
+        .successReturnUrl(requestDto.getSuccessReturnUrl())
+        .template(requestDto.getTemplate())
+        .extClientRef(requestDto.getClient())
+        .build();
+
+    try {
+      Response response = acquiringRs.saveCard(cardSaveDto);
+      if (response.getStatus() == 200) {
+        return objectMapper
+            .readValue(response.readEntity(String.class), OrderSummaryDto.class);
+      }
+      log.error("Acquiring card save response status: {}", response.getStatus());
+    } catch (Exception e) {
+      log.error("Error during acquiring card save call", e);
+      throw new AcquiringProcessingException(e.getMessage());
+    }
+    throw new GeneralApiServerException(ApiErrorType.E500_INTERNAL_SERVER_ERROR);
+  }
+
+  @Override
+  public List<CardSaveDto> getAllSavedCards(String extClientRef) {
+    try {
+      Response response = acquiringRs.getAllSavedCards(extClientRef);
+      if (response.getStatus() == 200) {
+        return objectMapper.readValue(response.readEntity(String.class), List.class);
+      }
+      log.error("Acquiring get all saved cards response status: {}", response.getStatus());
+    } catch (Exception e) {
+      log.error("Error during acquiring card save call", e);
+      throw new MfoGeneralApiException();
+    }
+    throw new GeneralApiServerException(ApiErrorType.E500_INTERNAL_SERVER_ERROR);
+  }
+
+  @Override
+  public void deleteSavedCard(String cardsId) {
+    try {
+      Response response = acquiringRs.deleteSavedCard(cardsId);
+      log.error("Acquiring delete saved response status: {}", response.getStatus());
+      if (response.getStatus() != 200) {
+        throw new AcquiringProcessingException("Error processing DELETE CARD request");
+      }
+    } catch (Exception e) {
+      log.error("Error during acquiring delete saved card call", e);
+      throw new MfoGeneralApiException();
+    }
   }
 
   private PaymentDto buildPaymentDto(PaymentEntity payment) {

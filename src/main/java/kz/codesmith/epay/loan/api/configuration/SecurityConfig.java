@@ -2,6 +2,7 @@ package kz.codesmith.epay.loan.api.configuration;
 
 import java.util.Arrays;
 import java.util.Collections;
+import kz.codesmith.epay.loan.api.configuration.payout.PayoutProperties;
 import kz.codesmith.epay.security.component.JwtAuthenticationEntryPoint;
 import kz.codesmith.epay.security.component.JwtAuthenticationFilter;
 import kz.codesmith.epay.security.component.JwtAuthorizationFilter;
@@ -15,9 +16,12 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.CachingUserDetailsService;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -51,7 +55,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
   }
 
   @Configuration
-  @Order(3)
+  @Order(4)
   @RequiredArgsConstructor
   public static class ApiSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -110,7 +114,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
   }
 
   @Configuration
-  @Order(2)
+  @Order(3)
   @RequiredArgsConstructor
   public static class SwaggerSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
@@ -125,6 +129,38 @@ class SecurityConfig extends BaseSecurityConfiguration {
           .hasAnyAuthority("AGENT_USER", "MERCHANT_USER")
           .and()
           .httpBasic();
+    }
+  }
+
+  @Configuration
+  @Order(2)
+  @RequiredArgsConstructor
+  public static class PayoutCallbackConfig extends WebSecurityConfigurerAdapter {
+    private final PayoutProperties payoutProperties;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http
+          .csrf().disable()
+          .antMatcher("/payout/callback")
+          .authorizeRequests().anyRequest().authenticated()
+          .and()
+          .httpBasic();
+    }
+
+    @Override
+    public void configure(AuthenticationManagerBuilder builder)
+        throws Exception {
+      builder.inMemoryAuthentication()
+          .passwordEncoder(passwordEncoder())
+          .withUser(payoutProperties.getUsername())
+          .password(payoutProperties.getPassword())
+          .roles("USER");
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+      return new BCryptPasswordEncoder();
     }
   }
 }

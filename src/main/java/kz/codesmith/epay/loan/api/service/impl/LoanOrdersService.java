@@ -35,6 +35,7 @@ import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.service.IDocumentCreatePdf;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
+import kz.codesmith.epay.loan.api.service.IPayoutService;
 import kz.codesmith.epay.loan.api.service.StorageService;
 import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
@@ -483,6 +484,39 @@ public class LoanOrdersService implements ILoanOrdersService {
     order.setLoanInterestRate(BigDecimal.valueOf(interestRate));
     loanOrdersRepository.save(order);
     return mapper.map(order, OrderDto.class);
+  }
+
+  @Override
+  public OrderDto updateLoanOrderPayoutResponseInfo(Integer orderId, OrderState status,
+      String body) {
+    var order = getOrder(orderId);
+    if (OrderState.CASHED_OUT_CARD.equals(order.getStatus())) {
+      return mapper.map(order, OrderDto.class);
+    }
+    order.getCashOutInfo().put(
+        CASH_OUT_RESULT_MAP_KEY,
+        objectMapper.convertValue(body, new TypeReference<>() {
+        })
+    );
+    order.setStatus(status);
+    loanOrdersRepository.save(order);
+    if (OrderState.CASHED_OUT_CARD.equals(status) || OrderState.CASHED_OUT_WALLET.equals(status)) {
+      var entity = getOrder(orderId);
+      var orderDto = mapper.map(entity, OrderDto.class);
+      mfoCoreService.sendBorrowerSignature(orderDto);
+    }
+    return mapper.map(order, OrderDto.class);
+  }
+
+  @Override
+  public List<OrderDto> getAllCashedOutInitializedOrders() {
+    return loanOrdersRepository.findAllByStatusAndTime(
+        IPayoutService.initPayoutStates,
+        LocalDateTime.now().minusDays(1),
+        LocalDateTime.now())
+        .stream()
+        .map(entity -> mapper.map(entity, OrderDto.class))
+        .collect(Collectors.toList());
   }
 
   private Map<String, Object> mapOrderEntity(OrderEntity order) {
