@@ -122,7 +122,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
           ).and()
           .authorizeRequests()
           .anyRequest()
-          .hasAuthority("AGENT_USER")
+          .hasAnyAuthority("AGENT_USER", "MERCHANT_USER")
           .and()
           .httpBasic();
     }
