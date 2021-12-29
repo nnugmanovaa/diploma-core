@@ -62,10 +62,7 @@ public class LoanWsPaymentImpl implements ILoanWsPayment {
     var serviceId = coreServiceMappings.get(String.valueOf(paymentApp.getData()
         .getPayType()));
     BigDecimal expectedAmount = paymentApp.getData().getSum();
-    if (checkedContract.getAmountOfDebt().compareTo(paymentApp.getData().getSum()) != 1) {
-      paymentApp.getData().setSum(checkedContract.getAmountOfDebt());
-      paymentApp.getData().setPayType(new BigInteger("3"));
-    }
+    selectPayType(paymentApp, checkedContract);
     PaymentEntity paymentEntity = paymentService.startNewPayment(paymentApp);
     messageService.fireLoanPaymentEvent(LoanWsPaymentDto.builder()
         .paymentApp(paymentApp.getData())
@@ -88,6 +85,21 @@ public class LoanWsPaymentImpl implements ILoanWsPayment {
     paymentEntity.setInitPaymentStatus(AcquiringBaseStatus.SUCCESS);
     return fillResponse(paymentApp.getData().getAccount(),
         String.valueOf(paymentEntity.getPaymentId()));
+  }
+
+  public void selectPayType(Payment paymentApp, Contract checkedContract) {
+    if (checkedContract.getAmountOfDebt().compareTo(paymentApp.getData().getSum()) != 1) {
+      paymentApp.getData().setSum(checkedContract.getAmountOfDebt());
+      paymentApp.getData().setPayType(new BigInteger("3"));
+    } else if (checkedContract.getMinimumAmountOfPartialRepayment()
+        .compareTo(paymentApp.getData().getSum()) == 0
+        || (checkedContract.getMinimumAmountOfPartialRepayment()
+        .compareTo(paymentApp.getData().getSum()) == -1 && checkedContract.getAmountOfDebt()
+        .compareTo(paymentApp.getData().getSum()) == 1)) {
+      paymentApp.getData().setPayType(new BigInteger("2"));
+    } else {
+      paymentApp.getData().setPayType(new BigInteger("1"));
+    }
   }
 
   @Override

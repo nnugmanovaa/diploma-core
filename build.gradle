@@ -369,6 +369,7 @@ useCaching()
 useThymeleafPdf()
 useSuperCsv()
 useSpringAmqp()
+useTestNg()
 
 checkstyle {
     toolVersion = "${checkStyleToolVersion}"
@@ -433,7 +434,14 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
+    useTestNG() {
+        // To generate reports by TestNG library
+        useDefaultListeners = true
+    }
+
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED"
+    }
 }
 
 wsdl2java {
