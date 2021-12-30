@@ -94,7 +94,11 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
 
     log.info("PKB KDN is {}", kdnScore);
     if (kdnScore >= maxKdn) {
-      log.info("(kdnScore >= maxKdn) {} >= {}. check for alternative",
+      /**
+       * used to suggest minimal alternative 42500, for users with kdn higher than
+       *custom minimal kdn for alternatives (maxKdnForAlternative)
+      */
+      /*log.info("(kdnScore >= maxKdn) {} >= {}. check for alternative",
           kdnScore, maxKdn);
       Integer userScore = context.getScoringInfo().getScore();
       if (userScore > minScoreBall && kdnScore <= maxKdnAlter) {
@@ -109,7 +113,8 @@ public class KdnCalculationRequirement implements Requirement<ScoringContext> {
               .failure(AlternativeRejectionReason.KDN_TOO_BIG_SUGGEST_ALTERNATIVE);
         }
         return RequirementResult.success();
-      }
+      }*/
+      log.info("(kdnScore >= maxKdn) {} >= {}", kdnScore, maxKdn);
       return RequirementResult.failure(RejectionReason.KDN_TOO_BIG);
     }
 
