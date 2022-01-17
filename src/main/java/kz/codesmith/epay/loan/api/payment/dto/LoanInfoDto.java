@@ -20,4 +20,6 @@ public class LoanInfoDto {
   private BigDecimal plannedPaymentAmount;
   private BigDecimal minimumAmountOfPartialRepayment;
   private LoanStatusDto loanStatus;
+  private Integer loanPeriodMonths;
+  private BigDecimal overpayment;
 }

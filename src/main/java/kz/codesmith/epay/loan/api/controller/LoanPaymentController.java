@@ -13,6 +13,8 @@ import kz.codesmith.epay.loan.api.model.acquiring.MfoProcessingStatus;
 import kz.codesmith.epay.loan.api.payment.ILoanPayment;
 import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountResponse;
+import kz.codesmith.epay.loan.api.payment.dto.LoanDeatilsRequestDto;
+import kz.codesmith.epay.loan.api.payment.dto.LoanDetailsResponseDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
@@ -101,5 +103,15 @@ public class LoanPaymentController {
     return ResponseEntity
         .ok(paymentService
             .getLoanPaymentsByOwner(startDate, endDate, states, pageRequest));
+  }
+
+  @ApiOperation(
+      value = "retrieves loan details by iin and contract number",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @PostMapping(path = "/details")
+  public ResponseEntity<LoanDetailsResponseDto> getLoanDetails(
+      @Valid @NotNull @RequestBody LoanDeatilsRequestDto requestDto) {
+    return ResponseEntity.ok(loanPayment.getLoanDetails(requestDto));
   }
 }

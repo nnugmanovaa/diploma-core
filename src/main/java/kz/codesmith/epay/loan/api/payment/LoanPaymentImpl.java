@@ -9,23 +9,28 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import kz.codesmith.epay.core.shared.model.exceptions.LoanPaymentException;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
+import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringBaseStatus;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringPaymentResponse;
 import kz.codesmith.epay.loan.api.model.acquiring.MfoProcessingStatus;
 import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanCheckAccountResponse;
+import kz.codesmith.epay.loan.api.payment.dto.LoanDeatilsRequestDto;
+import kz.codesmith.epay.loan.api.payment.dto.LoanDetailsResponseDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanInfoDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentRequestDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
 import kz.codesmith.epay.loan.api.payment.dto.LoanStatusDto;
 import kz.codesmith.epay.loan.api.payment.dto.OrderInitDto;
 import kz.codesmith.epay.loan.api.payment.services.LoanPaymentServices;
+import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.service.IAcquiringService;
 import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
@@ -50,19 +55,14 @@ public class LoanPaymentImpl implements ILoanPayment {
   private final IAcquiringService acquiringService;
   private final ModelMapper modelMapper;
   private final IMessageService messageService;
+  private final LoanOrdersRepository loanOrdersRepository;
 
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
   @Override
   public LoanCheckAccountResponse getAccountLoans(LoanCheckAccountRequestDto requestDto) {
-    PaymentApp paymentApp = new PaymentApp();
-    paymentApp.setTxnId("1");
-    paymentApp.setServiceName(mfoAppProperties.getServiceName());
-    paymentApp.setPayType(BigInteger.valueOf(loanPaymentServices.getPlannedRePaymentProductId()));
-    paymentApp.setCommand(LoanPaymentConstants.TYPE_CHECK);
-    paymentApp.setAccount(requestDto.getIin());
-    paymentApp.setSum(BigDecimal.ZERO);
+    PaymentApp paymentApp = fillPaymentAppForCheck(requestDto.getIin());
 
     Response response = processRequest(paymentApp);
     List<LoanInfoDto> loanInfoDtos = new ArrayList<>();
@@ -84,6 +84,17 @@ public class LoanPaymentImpl implements ILoanPayment {
     }
 
     return LoanCheckAccountResponse.builder().message(message).loans(loanInfoDtos).build();
+  }
+
+  private PaymentApp fillPaymentAppForCheck(String iin) {
+    PaymentApp paymentApp = new PaymentApp();
+    paymentApp.setTxnId("1");
+    paymentApp.setServiceName(mfoAppProperties.getServiceName());
+    paymentApp.setPayType(BigInteger.valueOf(loanPaymentServices.getPlannedRePaymentProductId()));
+    paymentApp.setCommand(LoanPaymentConstants.TYPE_CHECK);
+    paymentApp.setAccount(iin);
+    paymentApp.setSum(BigDecimal.ZERO);
+    return paymentApp;
   }
 
   @Override
@@ -162,6 +173,40 @@ public class LoanPaymentImpl implements ILoanPayment {
         AmqpConfig.LOAN_STATUSES_IIN_ROUTING_KEY);
 
     return paymentResponse;
+  }
+
+  @Override
+  public LoanDetailsResponseDto getLoanDetails(LoanDeatilsRequestDto requestDto) {
+    PaymentApp paymentApp = fillPaymentAppForCheck(requestDto.getIin());
+    LoanInfoDto loanInfoDto = LoanInfoDto.builder().build();
+    Response response = processRequest(paymentApp);
+    try {
+      if (Objects.nonNull(response) && Objects.nonNull(response.getContracts())) {
+        Optional<Contract> contract = response.getContracts()
+            .getContract()
+            .stream()
+            .filter(contr -> contr.getContractNumber().equals(requestDto.getContractExtRefId()))
+            .findFirst();
+
+        if (contract.isPresent()) {
+          loanInfoDto = fillLoanStatus(mapToLoanInfoDto(contract.get()));
+        }
+      }
+    } catch (Exception e) {
+      log.error("Error during checkAccount: ", e);
+    }
+    Optional<OrderEntity> entity = loanOrdersRepository
+        .findByOrderIdAndContractExtRefId(
+            requestDto.getOrderId(),
+            requestDto.getContractExtRefId());
+    if (entity.isPresent()) {
+      loanInfoDto.setLoanPeriodMonths(entity.get().getLoanPeriodMonths());
+      BigDecimal overpayment = loanInfoDto.getAmountOfDebt().subtract(entity.get().getLoanAmount());
+      loanInfoDto.setOverpayment(overpayment);
+    }
+    return LoanDetailsResponseDto.builder()
+        .loanInfoDto(loanInfoDto)
+        .build();
   }
 
   private XMLGregorianCalendar mapToGregorianCalendar(String date) {

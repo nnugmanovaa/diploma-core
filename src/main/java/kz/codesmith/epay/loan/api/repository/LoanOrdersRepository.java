@@ -120,4 +120,6 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
       List<OrderState> statuses,
       Pageable pageRequest
   );
+
+  Optional<OrderEntity> findByOrderIdAndContractExtRefId(Integer orderId, String contractExtRefId);
 }
