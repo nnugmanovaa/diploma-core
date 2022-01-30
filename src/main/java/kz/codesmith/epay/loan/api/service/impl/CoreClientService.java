@@ -1,8 +1,10 @@
 package kz.codesmith.epay.loan.api.service.impl;
 
 import kz.codesmith.epay.core.shared.model.clients.ClientDto;
+import kz.codesmith.epay.core.shared.model.clients.ClientWithContactDto;
 import kz.codesmith.epay.core.shared.model.users.UserDto;
 import kz.codesmith.epay.loan.api.configuration.mfs.core.MfsCoreProperties;
+import kz.codesmith.epay.loan.api.model.ClientEditDto;
 import kz.codesmith.epay.loan.api.service.ICoreClientService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.security.model.UserContextHolder;
@@ -92,6 +94,19 @@ public class CoreClientService implements ICoreClientService {
     var url = coreProperties.getUrl() + coreProperties.getClientsProfileUrl() + "/upload";
     var resp = restTemplate.exchange(
         url, HttpMethod.POST, request, String.class
+    );
+    return resp.getBody();
+  }
+
+  @Override
+  public ClientWithContactDto updateClientProfile(ClientEditDto dto) {
+    dto.setClientName(userContextHolder.getContext().getUsername());
+    var url = coreProperties.getUrl() + coreProperties.getClientsProfileUrl();
+    var httpEntity = new HttpEntity<>(dto, getHeadersWithAccessToken(
+        getAuthToken(coreProperties.getAgentTopUsername(),
+            coreProperties.getAgentTopPassword())));
+    var resp = restTemplate.exchange(
+        url, HttpMethod.PUT, httpEntity, ClientWithContactDto.class
     );
     return resp.getBody();
   }

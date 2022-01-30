@@ -2,6 +2,8 @@ package kz.codesmith.epay.loan.api.controller;
 
 import io.swagger.annotations.ApiOperation;
 import kz.codesmith.epay.core.shared.model.clients.ClientDto;
+import kz.codesmith.epay.core.shared.model.clients.ClientWithContactDto;
+import kz.codesmith.epay.loan.api.model.ClientEditDto;
 import kz.codesmith.epay.loan.api.service.ICoreClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -10,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,5 +45,15 @@ public class ClientController {
       @PathVariable("clientName") String clientName
   ) {
     return ResponseEntity.ok(coreClientService.getClientByClientName(clientName));
+  }
+
+  @ApiOperation(
+      value = "Edit clients profile",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @PutMapping
+  public ResponseEntity<ClientWithContactDto>
+      updateClientProfile(@RequestBody ClientEditDto dto) {
+    return ResponseEntity.ok(coreClientService.updateClientProfile(dto));
   }
 }
