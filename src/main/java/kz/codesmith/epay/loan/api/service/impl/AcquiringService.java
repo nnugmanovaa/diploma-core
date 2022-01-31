@@ -288,6 +288,8 @@ public class AcquiringService implements IAcquiringService {
         .description(payment.getDescription())
         .successReturnUrl(acquiringProperties.getSuccessReturnUrl() + orderId)
         .errorReturnUrl(acquiringProperties.getErrorReturnUrl() + orderId)
+        .callbackSuccessUrl(acquiringProperties.getCallbackSuccessUrl())
+        .callbackErrorUrl(acquiringProperties.getCallbackErrorUrl())
         .payload(Collections.emptyMap())
         .build();
   }

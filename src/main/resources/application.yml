@@ -121,8 +121,8 @@ integration:
     paymentUrl: ${INTEGRATION_ACQUIRING_PAYMENT_URL:http://cards-stage.pitech.kz/gw/payments/cards/charge}
     successReturnUrl: ${INTEGRATION_ACQUIRING_SUCCESS_RETURN_URL:https://money-stage.pitech.kz/topup?status=success&orderId=}
     errorReturnUrl: ${INTEGRATION_ACQUIRING_ERROR_RETURN_URL:https://money-stage.pitech.kz/topup?status=error&orderId=}
-    callbackSuccessUrl: ${ACQUIRING_SUCCESS_CALLBACK_URL:http://localhost:8083/api/acquiring/callback}
-    callbackErrorUrl: ${ACQUIRING_ERROR_CALLBACK_URL:http://localhost:8083/api/acquiring/callback}
+    callbackSuccessUrl: ${ACQUIRING_SUCCESS_CALLBACK_URL:https://loan-stage.pitech.kz/api/acquiring/callback}
+    callbackErrorUrl: ${ACQUIRING_ERROR_CALLBACK_URL:https://loan-stage.pitech.kz/api/acquiring/callback}
   mfo-app:
     url: ${MFO_PITECH_GW_URL:http://mfo.payintech.kz/DEMO_MFO_pintech/ws/PaymentServices.1cws}
     username: ${INTEGRATION_ONEC_USERNAME:ws_pitech}
