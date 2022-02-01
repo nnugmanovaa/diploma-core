@@ -1,6 +1,5 @@
 package kz.codesmith.epay.loan.api.model.acquiring;
 
-import java.time.ZonedDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,20 +9,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PaymentCallbackEventDto {
 
-  private ZonedDateTime eventTime;
   private String eventId;
   private String callbackType;
   private String ordersId;
-  private ZonedDateTime ordersTime;
   private String ordersState;
-  private ZonedDateTime ordersStateTime;
   private Integer banksId;
   private String banksName;
   private String bankReferenceId;
-  private ZonedDateTime bankReferenceTime;
   private Integer merchantsId;
   private String extOrdersId;
-  private ZonedDateTime extOrdersTime;
   private String extClientRef;
   private Object payload;
   private Integer clientsId;

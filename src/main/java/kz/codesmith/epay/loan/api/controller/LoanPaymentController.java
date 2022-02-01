@@ -72,7 +72,8 @@ public class LoanPaymentController {
   @PostMapping(path = "/init-payment")
   public ResponseEntity<AcquiringPaymentResponse> initPayment(
       @Valid @NotNull @RequestBody LoanPaymentRequestDto requestDto) {
-    return ResponseEntity.ok(loanPayment.initPayment(requestDto));
+    AcquiringPaymentResponse paymentResponse = loanPayment.initPayment(requestDto);
+    return ResponseEntity.ok(paymentResponse);
   }
 
   @PreAuthorize("hasAnyAuthority('MFO_ADMIN', 'ADMIN')")
