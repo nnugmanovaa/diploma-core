@@ -1,7 +1,6 @@
 package kz.codesmith.epay.loan.api.payment.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.loan.api.payment.LoanRepayType;
@@ -25,8 +24,6 @@ public class LoanPaymentRequestDto {
   private LoanRepayType loanRepayType;
 
   private Integer paymentId;
-
-  private LocalDateTime insertedTime;
 
   @NotNull
   private BigDecimal amount;

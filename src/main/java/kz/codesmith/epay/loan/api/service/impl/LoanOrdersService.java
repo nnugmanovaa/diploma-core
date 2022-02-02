@@ -14,28 +14,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
 import kz.codesmith.epay.core.shared.model.exceptions.IllegalApiUsageGeneralApiException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
 import kz.codesmith.epay.loan.api.component.DocumentGenerator;
+import kz.codesmith.epay.loan.api.domain.RepaymentScheduleEntity;
+import kz.codesmith.epay.loan.api.domain.ScheduleItemsEntity;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.documents.LoanDebtorFormPdfDto;
 import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.epay.loan.api.model.halyk.HalyCallbackRequestDto;
 import kz.codesmith.epay.loan.api.model.halyk.HalykCardCashoutResponseDto;
+import kz.codesmith.epay.loan.api.model.map.RepaymentScheduleMapper;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.model.orders.OrderType;
+import kz.codesmith.epay.loan.api.model.schedule.OrderDetailsSchedule;
+import kz.codesmith.epay.loan.api.model.schedule.OrderRepaymentSchedule;
 import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringInfo;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringRequest;
 import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
+import kz.codesmith.epay.loan.api.repository.RepaymentScheduleRepository;
+import kz.codesmith.epay.loan.api.repository.ScheduleItemsRepository;
 import kz.codesmith.epay.loan.api.service.IDocumentCreatePdf;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.codesmith.epay.loan.api.service.IPayoutService;
+import kz.codesmith.epay.loan.api.service.IProcessAsync;
 import kz.codesmith.epay.loan.api.service.StorageService;
 import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
@@ -73,6 +82,10 @@ public class LoanOrdersService implements ILoanOrdersService {
   private final StorageService storageService;
   private final IDocumentCreatePdf createPdf;
   private final DocumentGenerator docGenerator;
+  private final RepaymentScheduleRepository repaymentScheduleRepository;
+  private final ScheduleItemsRepository scheduleItemsRepository;
+  private final RepaymentScheduleMapper scheduleMapper;
+  private final IProcessAsync processAsync;
 
   @Override
   public Page<OrderDto> getOrdersByUserOwner(LocalDate startDate, LocalDate endDate,
@@ -504,6 +517,7 @@ public class LoanOrdersService implements ILoanOrdersService {
       var entity = getOrder(orderId);
       var orderDto = mapper.map(entity, OrderDto.class);
       mfoCoreService.sendBorrowerSignature(orderDto);
+      processAsync.getRepaymentScheduleEvent(entity);
     }
     return mapper.map(order, OrderDto.class);
   }
@@ -517,6 +531,42 @@ public class LoanOrdersService implements ILoanOrdersService {
         .stream()
         .map(entity -> mapper.map(entity, OrderDto.class))
         .collect(Collectors.toList());
+  }
+
+  @Transactional
+  @Override
+  public OrderRepaymentSchedule getLoanRepaymentDetails() {
+    Integer clientId = userContext.getContext().getOwnerId();
+    Optional<OrderEntity> orderEntity = loanOrdersRepository.findByClientIdAndStatus(clientId,
+        OrderState.CASHED_OUT_CARD.name());
+    if (orderEntity.isPresent()) {
+      OrderEntity order = orderEntity.get();
+      Optional<RepaymentScheduleEntity> scheduleEntity = repaymentScheduleRepository
+          .findByOrderId(order.getOrderId());
+      if (scheduleEntity.isPresent()) {
+        List<ScheduleItemsEntity> entities = scheduleItemsRepository
+            .findAllByRepaymentScheduleId(scheduleEntity.get().getRepaymentScheduleId());
+        BigDecimal monthPayment = entities.get(0).getAmountToBePaid();
+        OrderDetailsSchedule detailsSchedule =  OrderDetailsSchedule.builder()
+            .contract(order.getContractExtRefId())
+            .monthPayment(monthPayment)
+            .totalAmount(order.getLoanAmount())
+            .contractDate(order.getContractExtRefTime().toLocalDate())
+            .period(order.getLoanPeriodMonths())
+            .amountRemain(scheduleEntity.get().getAmountRemain())
+            .amountOverPayment(scheduleEntity.get().getAmountOverpayment())
+            .scheduleItems(scheduleMapper.toItemsDtoList(entities))
+            .build();
+        return OrderRepaymentSchedule.builder()
+            .orderDetailsSchedule(detailsSchedule)
+            .hasActiveLoan(true)
+            .build();
+      }
+    }
+    return OrderRepaymentSchedule.builder()
+        .hasActiveLoan(false)
+        .message("Не найдено открытых микрокредитов")
+        .build();
   }
 
   private Map<String, Object> mapOrderEntity(OrderEntity order) {

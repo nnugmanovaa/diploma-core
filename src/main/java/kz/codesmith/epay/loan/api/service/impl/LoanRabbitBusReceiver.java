@@ -1,11 +1,13 @@
 package kz.codesmith.epay.loan.api.service.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeFactory;
 import kz.codesmith.epay.core.shared.model.analyzes.LoanPaymentErrorDto;
@@ -14,11 +16,11 @@ import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException
 import kz.codesmith.epay.core.shared.model.services.FieldType;
 import kz.codesmith.epay.core.shared.model.services.ServiceField;
 import kz.codesmith.epay.loan.api.configuration.AmqpConfig;
+import kz.codesmith.epay.loan.api.domain.RepaymentScheduleEntity;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.domain.payments.PaymentEntity;
 import kz.codesmith.epay.loan.api.model.acquiring.AcquiringOrderState;
 import kz.codesmith.epay.loan.api.model.acquiring.OrderSummaryDto;
-import kz.codesmith.epay.loan.api.model.cashout.InitClientWalletTopUpDirectDto;
 import kz.codesmith.epay.loan.api.model.cashout.PaymentAppEntityEventDto;
 import kz.codesmith.epay.loan.api.model.core.CorePaymentReturnDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
@@ -33,6 +35,7 @@ import kz.codesmith.epay.loan.api.payment.dto.LoanPaymentResponseDto;
 import kz.codesmith.epay.loan.api.payment.ws.LoanWsPaymentDto;
 import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.repository.PaymentRepository;
+import kz.codesmith.epay.loan.api.repository.RepaymentScheduleRepository;
 import kz.codesmith.epay.loan.api.service.IAcquiringService;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMessageService;
@@ -75,6 +78,7 @@ public class LoanRabbitBusReceiver {
   private final IAcquiringService acquiringService;
   private final ILoanOrdersService loanOrdersService;
   private final PaymentRepository paymentRepository;
+  private final RepaymentScheduleRepository scheduleRepository;
 
   public static final String SUCCESS_RESPONSE_RESULT = "0";
   public static final String ORIGIN_EXCHANGE_HEADER = "x-first-death-exchange";
@@ -99,6 +103,9 @@ public class LoanRabbitBusReceiver {
               .comment(responseDto.getMessage())
               .build());
         }
+        if (responseDto.getStatus() == LoanPaymentStatus.SUCCESS) {
+          substractLoanRemainAmount(dto.getPaymentId(), dto.getAmount());
+        }
         paymentService.updateProcessingInfo(dto.getPaymentId(), responseDto);
       } else {
         log.error("The request data is null");
@@ -108,6 +115,22 @@ public class LoanRabbitBusReceiver {
     }
 
   }
+
+  private void substractLoanRemainAmount(Integer paymentId, BigDecimal amount) {
+    Integer loanOrderId = paymentService
+        .getPayment(paymentId)
+        .getLoanOrderId();
+
+    Optional<RepaymentScheduleEntity> scheduleEntity = scheduleRepository
+        .findByOrderId(loanOrderId);
+
+    scheduleEntity.ifPresent(entity -> {
+      BigDecimal remainAmount = entity.getAmountRemain().subtract(amount);
+      entity.setAmountRemain(remainAmount);
+      scheduleRepository.save(entity);
+    });
+  }
+
 
   @RabbitListener(
       queues = {AmqpConfig.LOAN_STATUSES_IIN_QUEUE_NAME},
@@ -284,6 +307,7 @@ public class LoanRabbitBusReceiver {
                   .status(LoanPaymentStatus.SUCCESS)
                   .message(response.getComment())
                   .build());
+          substractLoanRemainAmount(paymentDto.getPaymentId(), paymentDto.getPaymentApp().getSum());
         } else {
           log.info("Error processing loan payment paymentId: {}, result: {}, message: {}",
               paymentDto.getPaymentId(), response.getResult(), response.getComment());

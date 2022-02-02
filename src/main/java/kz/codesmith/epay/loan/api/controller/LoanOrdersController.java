@@ -10,6 +10,8 @@ import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.core.shared.controller.qualifier.ApiPageable;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.schedule.OrderDetailsSchedule;
+import kz.codesmith.epay.loan.api.model.schedule.OrderRepaymentSchedule;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IReportExcelService;
 import kz.codesmith.epay.loan.api.service.IReportService;
@@ -183,5 +185,11 @@ public class LoanOrdersController {
           .header("Content-disposition", "attachment; filename=" + filename)
           .body(ordersByArr);
     }
+  }
+
+  @ApiOperation(value = "Retrieves client open loan repayment schedule")
+  @GetMapping(path = "/repayment-schedule")
+  public OrderRepaymentSchedule getLoanRepaymentDetails() {
+    return ordersServices.getLoanRepaymentDetails();
   }
 }

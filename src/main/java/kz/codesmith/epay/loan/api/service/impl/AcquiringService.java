@@ -198,6 +198,9 @@ public class AcquiringService implements IAcquiringService {
               .firePayEvent(modelMapper.map(paymentEntity, LoanPaymentRequestDto.class),
                   AmqpConfig.PAYMENT_SEND_ROUTING_KEY);
 
+          messageService.fireLoanIinStatusGetEvent(paymentEntity.getClientRef(),
+              AmqpConfig.LOAN_STATUSES_IIN_ROUTING_KEY);
+
           outNotificationResponse.setStatus(AcquiringBaseStatus.SUCCESS);
           paymentRepository.save(paymentEntity);
         } else {

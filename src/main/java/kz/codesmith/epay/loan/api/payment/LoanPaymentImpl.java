@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,8 +41,11 @@ import kz.pitech.mfo.PaymentServicesPortType;
 import kz.pitech.mfo.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.common.util.CollectionUtils;
 import org.modelmapper.ModelMapper;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -56,9 +60,12 @@ public class LoanPaymentImpl implements ILoanPayment {
   private final ModelMapper modelMapper;
   private final IMessageService messageService;
   private final LoanOrdersRepository loanOrdersRepository;
+  private final Environment environment;
 
   private static final DateTimeFormatter DATE_TIME_FORMATTER =
       DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+  private static final String ACTIVE_PROFILE_PRODUCTION = "production";
 
   @Override
   public LoanCheckAccountResponse getAccountLoans(LoanCheckAccountRequestDto requestDto) {
@@ -147,10 +154,14 @@ public class LoanPaymentImpl implements ILoanPayment {
         .valueOf(getProductExtRefId(requestDto.getLoanRepayType())));
     paymentApp.setServiceName(mfoAppProperties.getServiceName());
     paymentApp.setTxnDate(mapToGregorianCalendar(String
-        .valueOf(requestDto.getInsertedTime())));
+        .valueOf(LocalDateTime.now())));
     paymentApp.setContractDate(mapToGregorianCalendar(requestDto.getContractDate()));
-    paymentApp.setTxnId(String
-        .valueOf(requestDto.getPaymentId()));
+    if (Arrays.asList(environment.getActiveProfiles()).contains(ACTIVE_PROFILE_PRODUCTION)) {
+      paymentApp.setTxnId(String
+          .valueOf(requestDto.getPaymentId()));
+    } else {
+      paymentApp.setTxnId(RandomStringUtils.random(5, true, true));
+    }
   }
 
   @Override
@@ -278,7 +289,7 @@ public class LoanPaymentImpl implements ILoanPayment {
         .productExtRefId(String.valueOf(getProductExtRefId(requestDto.getLoanRepayType())))
         .amount(requestDto.getAmount())
         .contractDate(requestDto.getContractDate())
-        .orderTime(requestDto.getInsertedTime())
+        .orderTime(LocalDateTime.now())
         .contractNumber(requestDto.getContractNumber())
         .iin(requestDto.getClientRef())
         .build();
