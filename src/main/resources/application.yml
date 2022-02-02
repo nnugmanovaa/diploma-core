@@ -119,8 +119,8 @@ integration:
     connectTimeout: ${INTEGRATION_ACQUIRING_CONNECT_TIMEOUT:30000}
     readTimeout: ${INTEGRATION_ACQUIRING_READ_TIMEOUT:45000}
     paymentUrl: ${INTEGRATION_ACQUIRING_PAYMENT_URL:http://cards-stage.pitech.kz/gw/payments/cards/charge}
-    successReturnUrl: ${INTEGRATION_ACQUIRING_SUCCESS_RETURN_URL:https://money-stage.pitech.kz/topup?status=success&orderId=}
-    errorReturnUrl: ${INTEGRATION_ACQUIRING_ERROR_RETURN_URL:https://money-stage.pitech.kz/topup?status=error&orderId=}
+    successReturnUrl: ${INTEGRATION_ACQUIRING_SUCCESS_RETURN_URL:https://money-stage.pitech.kz}
+    errorReturnUrl: ${INTEGRATION_ACQUIRING_ERROR_RETURN_URL:https://money-stage.pitech.kz}
     callbackSuccessUrl: ${ACQUIRING_SUCCESS_CALLBACK_URL:https://loan-stage.pitech.kz/api/acquiring/callback}
     callbackErrorUrl: ${ACQUIRING_ERROR_CALLBACK_URL:https://loan-stage.pitech.kz/api/acquiring/callback}
   mfo-app:
