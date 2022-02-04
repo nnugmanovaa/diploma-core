@@ -17,5 +17,5 @@ public class SignInResponse {
   private List<String> roles;
   private String type;
   private String username;
-
+  private Integer clientId;
 }
