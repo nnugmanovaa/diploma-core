@@ -19,6 +19,8 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, Integer>
 
   Optional<PaymentEntity> findByLoanOrderId(Integer loanOrderId);
 
+  Optional<PaymentEntity> findFirstByLoanOrderIdOrderByPaymentIdDesc(Integer loanOrderId);
+
   @Query(value =
       "select p.paymentId, p.mfoProcessingMessage "
           + "from PaymentEntity as p "

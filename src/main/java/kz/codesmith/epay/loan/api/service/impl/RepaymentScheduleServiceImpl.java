@@ -1,9 +1,11 @@
 package kz.codesmith.epay.loan.api.service.impl;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import kz.codesmith.epay.loan.api.domain.RepaymentScheduleEntity;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
@@ -12,6 +14,7 @@ import kz.codesmith.epay.loan.api.model.schedule.RepaymentScheduleDto;
 import kz.codesmith.epay.loan.api.model.schedule.ScheduleItemsDto;
 import kz.codesmith.epay.loan.api.repository.RepaymentScheduleRepository;
 import kz.codesmith.epay.loan.api.repository.ScheduleItemsRepository;
+import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.loan.api.service.IRepaymentScheduleService;
 import kz.payintech.DataRowLoanSchedule;
 import kz.payintech.ListLoanMethod;
@@ -32,10 +35,17 @@ public class RepaymentScheduleServiceImpl implements IRepaymentScheduleService {
   private final RepaymentScheduleRepository repaymentScheduleRepository;
   private final ScheduleItemsRepository scheduleItemsRepository;
   private final RepaymentScheduleMapper scheduleMapper;
+  private final IPaymentService paymentService;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
   public void getRepaymentSchedule(OrderEntity order) {
+    Optional<RepaymentScheduleEntity> scheduleEntity =
+        repaymentScheduleRepository.findByOrderId(order.getOrderId());
+
+    if (scheduleEntity.isPresent()) {
+      return;
+    }
     var response = wsMfoCoreService.getLoanScheduleCalculation(
         order.getLoanAmount(),
         BigInteger.valueOf(order.getLoanPeriodMonths()),
@@ -60,6 +70,23 @@ public class RepaymentScheduleServiceImpl implements IRepaymentScheduleService {
       }
       scheduleItemsRepository.saveAll(scheduleMapper.toItemsEntityList(scheduleItems));
     }
+  }
+
+
+  @Override
+  public void substractLoanRemainAmount(Integer paymentId, BigDecimal amount) {
+    Integer loanOrderId = paymentService
+        .getPayment(paymentId)
+        .getLoanOrderId();
+
+    Optional<RepaymentScheduleEntity> scheduleEntity = repaymentScheduleRepository
+        .findByOrderId(loanOrderId);
+
+    scheduleEntity.ifPresent(entity -> {
+      BigDecimal remainAmount = entity.getAmountRemain().subtract(amount);
+      entity.setAmountRemain(remainAmount);
+      repaymentScheduleRepository.save(entity);
+    });
   }
 
   private RepaymentScheduleDto fillRepaymentSchedule(OrderEntity order,

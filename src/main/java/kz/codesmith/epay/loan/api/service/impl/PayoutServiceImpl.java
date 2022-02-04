@@ -120,7 +120,7 @@ public class PayoutServiceImpl implements IPayoutService {
 
       Integer loanOrderId = Integer.valueOf(callbackEventDto.getExtOrdersId());
       PaymentEntity paymentEntity = paymentRepository
-          .findByLoanOrderId(loanOrderId)
+          .findFirstByLoanOrderIdOrderByPaymentIdDesc(loanOrderId)
           .orElseThrow(() ->
               new NotFoundApiServerException(ApiErrorTypeParamValues.ORDER, loanOrderId));
 

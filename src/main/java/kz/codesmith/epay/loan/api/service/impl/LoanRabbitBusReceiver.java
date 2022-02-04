@@ -40,6 +40,7 @@ import kz.codesmith.epay.loan.api.service.IAcquiringService;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMessageService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
+import kz.codesmith.epay.loan.api.service.IRepaymentScheduleService;
 import kz.codesmith.epay.telegram.gw.controller.ITelegramBotController;
 import kz.integracia.Contract;
 import kz.payintech.InformationTheAgreement;
@@ -79,6 +80,7 @@ public class LoanRabbitBusReceiver {
   private final ILoanOrdersService loanOrdersService;
   private final PaymentRepository paymentRepository;
   private final RepaymentScheduleRepository scheduleRepository;
+  private final IRepaymentScheduleService repaymentScheduleService;
 
   public static final String SUCCESS_RESPONSE_RESULT = "0";
   public static final String ORIGIN_EXCHANGE_HEADER = "x-first-death-exchange";
@@ -104,7 +106,8 @@ public class LoanRabbitBusReceiver {
               .build());
         }
         if (responseDto.getStatus() == LoanPaymentStatus.SUCCESS) {
-          substractLoanRemainAmount(dto.getPaymentId(), dto.getAmount());
+          repaymentScheduleService
+              .substractLoanRemainAmount(dto.getPaymentId(), dto.getAmount());
         }
         paymentService.updateProcessingInfo(dto.getPaymentId(), responseDto);
       } else {
@@ -114,21 +117,6 @@ public class LoanRabbitBusReceiver {
       log.error(e.getMessage());
     }
 
-  }
-
-  private void substractLoanRemainAmount(Integer paymentId, BigDecimal amount) {
-    Integer loanOrderId = paymentService
-        .getPayment(paymentId)
-        .getLoanOrderId();
-
-    Optional<RepaymentScheduleEntity> scheduleEntity = scheduleRepository
-        .findByOrderId(loanOrderId);
-
-    scheduleEntity.ifPresent(entity -> {
-      BigDecimal remainAmount = entity.getAmountRemain().subtract(amount);
-      entity.setAmountRemain(remainAmount);
-      scheduleRepository.save(entity);
-    });
   }
 
 
@@ -307,7 +295,9 @@ public class LoanRabbitBusReceiver {
                   .status(LoanPaymentStatus.SUCCESS)
                   .message(response.getComment())
                   .build());
-          substractLoanRemainAmount(paymentDto.getPaymentId(), paymentDto.getPaymentApp().getSum());
+          repaymentScheduleService
+              .substractLoanRemainAmount(paymentDto.getPaymentId(),
+                  paymentDto.getPaymentApp().getSum());
         } else {
           log.info("Error processing loan payment paymentId: {}, result: {}, message: {}",
               paymentDto.getPaymentId(), response.getResult(), response.getComment());
