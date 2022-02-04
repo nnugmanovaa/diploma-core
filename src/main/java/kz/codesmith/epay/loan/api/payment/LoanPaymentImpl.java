@@ -106,7 +106,16 @@ public class LoanPaymentImpl implements ILoanPayment {
 
   @Override
   public AcquiringPaymentResponse initPayment(LoanPaymentRequestDto requestDto) {
+    PaymentApp paymentApp = fillPaymentAppForCheck(requestDto.getClientRef());
     try {
+      Response checkResponse = processRequest(paymentApp);
+      Contract checkedContract = checkResponse.getContracts()
+          .getContract()
+          .stream()
+          .filter(contract -> contract.getContractNumber()
+              .equals(requestDto.getContractNumber()))
+          .findFirst().get();
+      selectPayType(requestDto, checkedContract);
       return acquiringService.initPayment(toOrderInitDto(requestDto));
     } catch (Exception e) {
       log.error("error during initPayment {}", e.getMessage());
@@ -114,6 +123,21 @@ public class LoanPaymentImpl implements ILoanPayment {
           .status(AcquiringBaseStatus.ERROR)
           .message(LoanPaymentConstants.MESSAGE_UNEXPECTED_BEHAVIOUR)
           .build();
+    }
+  }
+
+  public void selectPayType(LoanPaymentRequestDto requestDto, Contract checkedContract) {
+    if (checkedContract.getAmountOfDebt().compareTo(requestDto.getAmount()) != 1) {
+      requestDto.setAmount(checkedContract.getAmountOfDebt());
+      requestDto.setLoanRepayType(LoanRepayType.TOTAL_REPAYMENT);
+    } else if (checkedContract.getMinimumAmountOfPartialRepayment()
+        .compareTo(requestDto.getAmount()) == 0
+        || (checkedContract.getMinimumAmountOfPartialRepayment()
+        .compareTo(requestDto.getAmount()) == -1 && checkedContract.getAmountOfDebt()
+        .compareTo(requestDto.getAmount()) == 1)) {
+      requestDto.setLoanRepayType(LoanRepayType.PARTIAL_REPAYMENT);
+    } else {
+      requestDto.setLoanRepayType(LoanRepayType.PLANNED_REPAYMENT);
     }
   }
 
