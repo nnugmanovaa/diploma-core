@@ -5,6 +5,7 @@ import kz.codesmith.epay.core.shared.model.clients.ClientWithContactDto;
 import kz.codesmith.epay.core.shared.model.users.UserDto;
 import kz.codesmith.epay.loan.api.configuration.mfs.core.MfsCoreProperties;
 import kz.codesmith.epay.loan.api.model.ClientEditDto;
+import kz.codesmith.epay.loan.api.model.ClientExistDto;
 import kz.codesmith.epay.loan.api.service.ICoreClientService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.security.model.UserContextHolder;
@@ -107,6 +108,18 @@ public class CoreClientService implements ICoreClientService {
             coreProperties.getAgentTopPassword())));
     var resp = restTemplate.exchange(
         url, HttpMethod.PUT, httpEntity, ClientWithContactDto.class
+    );
+    return resp.getBody();
+  }
+
+  @Override
+  public ClientExistDto checkClientExist(String clientName) {
+    var url = coreProperties.getUrl() + coreProperties.getClientsProfileUrl() + "/" + clientName;
+    var httpEntity = new HttpEntity<>(getHeadersWithAccessToken(
+        getAuthToken(coreProperties.getAgentTopUsername(),
+            coreProperties.getAgentTopPassword())));
+    var resp = restTemplate.exchange(
+        url, HttpMethod.GET, httpEntity, ClientExistDto.class
     );
     return resp.getBody();
   }

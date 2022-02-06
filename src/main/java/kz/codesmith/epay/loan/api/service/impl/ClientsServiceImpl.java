@@ -5,6 +5,7 @@ import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorType;
 import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
 import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
+import kz.codesmith.epay.loan.api.model.ClientExistDto;
 import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.epay.loan.api.payment.LoanPaymentConstants;
 import kz.codesmith.epay.loan.api.service.IClientsService;
@@ -44,5 +45,10 @@ public class ClientsServiceImpl implements IClientsService {
     } else {
       throw new GeneralApiServerException(ApiErrorType.E500_USER_NOT_FOUND);
     }
+  }
+
+  @Override
+  public ClientExistDto checkClientExist(String clientName) {
+    return coreClientService.checkClientExist(clientName);
   }
 }

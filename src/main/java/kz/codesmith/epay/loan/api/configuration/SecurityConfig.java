@@ -79,6 +79,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
           .antMatchers(HttpMethod.GET, permittedUrls).permitAll()
           .antMatchers(HttpMethod.POST, "/halyk/callback").permitAll()
           .antMatchers(HttpMethod.POST, "/acquiring/callback").permitAll()
+          .antMatchers(HttpMethod.GET, "/public/client/**").permitAll()
           .antMatchers(HttpMethod.POST, "/public/loan/schedule/calculation").permitAll()
           .anyRequest().authenticated()
           .and()
