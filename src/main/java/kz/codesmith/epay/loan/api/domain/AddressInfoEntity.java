@@ -47,7 +47,7 @@ public class AddressInfoEntity {
   private String periodOfResidence;
 
   @Column(name = "address_is_valid")
-  private Boolean addressIsValid;
+  private boolean addressValid;
 
   @Column(name = "clients_id")
   private Integer clientsId;

@@ -15,5 +15,5 @@ public class AddressInfoDto {
   private String house;
   private String apartment;
   private String periodOfResidence;
-  private Boolean addressIsValid;
+  private boolean addressValid;
 }

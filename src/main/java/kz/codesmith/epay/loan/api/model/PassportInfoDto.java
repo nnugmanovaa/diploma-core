@@ -2,12 +2,14 @@ package kz.codesmith.epay.loan.api.model;
 
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class PassportInfoDto {
   private String firstName;
   private String lastName;
@@ -18,5 +20,6 @@ public class PassportInfoDto {
   private String nationalIdIssuer;
   private LocalDate nationalIdIssueDate;
   private LocalDate nationalIdValidDate;
-  private Boolean isIpdl;
+  private boolean ipdl;
+  private String iin;
 }

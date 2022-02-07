@@ -1,8 +1,7 @@
 package kz.codesmith.epay.loan.api.service.impl;
 
+import java.util.Objects;
 import java.util.Optional;
-import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorType;
-import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
 import kz.codesmith.epay.loan.api.component.AddressInfoMapper;
 import kz.codesmith.epay.loan.api.component.JobDetailsMapper;
 import kz.codesmith.epay.loan.api.component.PassportInfoMapper;
@@ -88,44 +87,63 @@ public class PersonalInfoServiceImpl implements IPersonalInfoService {
   @Transactional
   public PersonalFullDataDto updatePersonalFullData(PersonalFullDataDto personalFullDataDto,
       Integer clientsId) {
-
+    PersonalFullDataDto fullDataDto = new PersonalFullDataDto();
     var addressEntity = addressInfoRepository.findByClientsId(clientsId);
-    if (addressEntity.isEmpty()) {
-      throw new GeneralApiServerException(ApiErrorType.E500_NOT_FOUND);
+    if (!addressEntity.isEmpty()) {
+      var address = addressInfoMapper
+          .toEntity(personalFullDataDto.getAddressInfoDto());
+      address.setClientsId(clientsId);
+      address.setAddressInfoId(addressEntity.get().getAddressInfoId());
+
+      address = addressInfoRepository.save(address);
+      fullDataDto.setAddressInfoDto(addressInfoMapper.toDto(address));
+    } else {
+      if (Objects.nonNull(personalFullDataDto.getAddressInfoDto())) {
+        var addressInfo = addressInfoMapper.toEntity(personalFullDataDto.getAddressInfoDto());
+        addressInfo.setClientsId(clientsId);
+        addressInfo = addressInfoRepository.save(addressInfo);
+        fullDataDto.setAddressInfoDto(addressInfoMapper.toDto(addressInfo));
+      }
     }
-
-    var address = addressInfoMapper
-        .toEntity(personalFullDataDto.getAddressInfoDto());
-    address.setClientsId(clientsId);
-    address.setAddressInfoId(addressEntity.get().getAddressInfoId());
-
-    address = addressInfoRepository.save(address);
 
     var jobEntity = jobDetailsRepository.findByClientsId(clientsId);
-    if (jobEntity.isEmpty()) {
-      throw new GeneralApiServerException(ApiErrorType.E500_NOT_FOUND);
+    if (!jobEntity.isEmpty()) {
+      var job = jobDetailsMapper
+          .toEntity(personalFullDataDto.getJobDetailsDto());
+
+      job.setClientsId(clientsId);
+      job.setJobDetailsId(jobEntity.get().getJobDetailsId());
+
+      job = jobDetailsRepository.save(job);
+      fullDataDto.setJobDetailsDto(jobDetailsMapper.toDto(job));
+    } else {
+      if (Objects.nonNull(personalFullDataDto.getJobDetailsDto())) {
+        var jobInfo = jobDetailsMapper.toEntity(personalFullDataDto.getJobDetailsDto());
+        jobInfo.setClientsId(clientsId);
+        jobInfo = jobDetailsRepository.save(jobInfo);
+        fullDataDto.setJobDetailsDto(jobDetailsMapper.toDto(jobInfo));
+      }
     }
-    var job = jobDetailsMapper
-        .toEntity(personalFullDataDto.getJobDetailsDto());
-
-    job.setClientsId(clientsId);
-    job.setJobDetailsId(jobEntity.get().getJobDetailsId());
-
-    job = jobDetailsRepository.save(job);
 
     var passportEntity = passportInfoRepository.findByClientsId(clientsId);
-    if (passportEntity.isEmpty()) {
-      throw new GeneralApiServerException(ApiErrorType.E500_NOT_FOUND);
+    if (!passportEntity.isEmpty()) {
+      var passport = passportInfoMapper
+          .toEntity(personalFullDataDto.getPassportInfoDto());
+      passport.setClientsId(clientsId);
+      passport.setPassportInfoId(passportEntity.get().getPassportInfoId());
+
+      passport = passportInfoRepository.save(passport);
+      fullDataDto.setPassportInfoDto(passportInfoMapper.toDto(passport));
+    } else {
+      if (Objects.nonNull(personalFullDataDto.getPassportInfoDto())) {
+        var passportInfo = passportInfoMapper.toEntity(personalFullDataDto.getPassportInfoDto());
+        passportInfo.setClientsId(clientsId);
+        passportInfo = passportInfoRepository.save(passportInfo);
+        fullDataDto.setPassportInfoDto(passportInfoMapper.toDto(passportInfo));
+      }
     }
-    var passport = passportInfoMapper
-        .toEntity(personalFullDataDto.getPassportInfoDto());
-    passport.setClientsId(clientsId);
-    passport.setPassportInfoId(passportEntity.get().getPassportInfoId());
 
-    passport = passportInfoRepository.save(passport);
-
-    return new PersonalFullDataDto(addressInfoMapper.toDto(address),
-        jobDetailsMapper.toDto(job), passportInfoMapper.toDto(passport));
+    return fullDataDto;
 
   }
 }

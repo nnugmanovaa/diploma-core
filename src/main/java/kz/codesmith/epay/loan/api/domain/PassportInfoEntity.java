@@ -55,8 +55,11 @@ public class PassportInfoEntity {
   private LocalDate nationalIdValidDate;
 
   @Column(name = "is_ipdl")
-  private Boolean isIpdl;
+  private boolean ipdl;
 
   @Column(name = "clients_id")
   private Integer clientsId;
+
+  @Column(name = "iin")
+  private String iin;
 }

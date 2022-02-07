@@ -1,6 +1,5 @@
 package kz.codesmith.epay.loan.api.controller;
 
-import javax.validation.Valid;
 import kz.codesmith.epay.loan.api.model.AddressInfoDto;
 import kz.codesmith.epay.loan.api.model.JobDetailsDto;
 import kz.codesmith.epay.loan.api.model.PassportInfoDto;
@@ -27,19 +26,19 @@ public class PersonalInfoController {
   private final IPersonalInfoService personalInfoService;
 
   @PostMapping(path = "/address-info/{clientsId}")
-  public ResponseEntity<AddressInfoDto> saveAddressInfo(@RequestBody @Valid AddressInfoDto
+  public ResponseEntity<AddressInfoDto> saveAddressInfo(@RequestBody AddressInfoDto
       addressInfoDto, @PathVariable Integer clientsId) {
     return ResponseEntity.ok(personalInfoService.saveAddressInfo(addressInfoDto, clientsId));
   }
 
   @PostMapping(path = "/job-details/{clientsId}")
-  public ResponseEntity<JobDetailsDto> saveJobDetails(@RequestBody @Valid JobDetailsDto
+  public ResponseEntity<JobDetailsDto> saveJobDetails(@RequestBody JobDetailsDto
       jobDetailsDto, @PathVariable Integer clientsId) {
     return ResponseEntity.ok(personalInfoService.saveJobDetails(jobDetailsDto, clientsId));
   }
 
   @PostMapping(path = "/passport-info/{clientsId}")
-  public ResponseEntity<PassportInfoDto> savePassportInfo(@RequestBody @Valid PassportInfoDto
+  public ResponseEntity<PassportInfoDto> savePassportInfo(@RequestBody PassportInfoDto
       passportInfoDto, @PathVariable Integer clientsId) {
     return ResponseEntity.ok(personalInfoService.savePassportInfo(passportInfoDto, clientsId));
   }
@@ -52,7 +51,7 @@ public class PersonalInfoController {
 
   @PutMapping(path = "/update-personal-info/{clientsId}")
   public ResponseEntity<PersonalFullDataDto> updatePersonalFullData(
-      @RequestBody @Valid PersonalFullDataDto personalFullDataDto,
+      @RequestBody PersonalFullDataDto personalFullDataDto,
       @PathVariable Integer clientsId) {
     return ResponseEntity.ok(personalInfoService.updatePersonalFullData(personalFullDataDto,
         clientsId));

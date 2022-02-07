@@ -1,0 +1,1 @@
+ALTER TABLE loan.passport_info ADD iin VARCHAR (255);
