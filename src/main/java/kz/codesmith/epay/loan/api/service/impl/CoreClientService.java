@@ -4,8 +4,10 @@ import kz.codesmith.epay.core.shared.model.clients.ClientDto;
 import kz.codesmith.epay.core.shared.model.clients.ClientWithContactDto;
 import kz.codesmith.epay.core.shared.model.users.UserDto;
 import kz.codesmith.epay.loan.api.configuration.mfs.core.MfsCoreProperties;
+import kz.codesmith.epay.loan.api.model.ClientChangeNameDto;
 import kz.codesmith.epay.loan.api.model.ClientEditDto;
 import kz.codesmith.epay.loan.api.model.ClientExistDto;
+import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.epay.loan.api.service.ICoreClientService;
 import kz.codesmith.epay.loan.api.service.IPaymentService;
 import kz.codesmith.epay.security.model.UserContextHolder;
@@ -122,6 +124,24 @@ public class CoreClientService implements ICoreClientService {
         url, HttpMethod.GET, httpEntity, ClientExistDto.class
     );
     return resp.getBody();
+  }
+
+  @Override
+  public ClientDto changeClientName(ClientChangeNameDto changeNameDto,
+      String requestTokenHeader) {
+    var url = coreProperties.getUrl() + coreProperties.getClientsProfileUrl() + "/clientname";
+    String jwtToken = requestTokenHeader.substring(7);
+    var headers = new HttpHeaders();
+    headers.setBearerAuth(jwtToken);
+    var httpEntity = new HttpEntity<>(changeNameDto, headers);
+    try {
+      var resp = restTemplate.exchange(
+          url, HttpMethod.PUT, httpEntity, ClientDto.class
+      );
+      return resp.getBody();
+    } catch (Exception e) {
+      throw new MfoGeneralApiException(e.getMessage());
+    }
   }
 
   private HttpHeaders getHeadersWithAccessToken(String accessToken) {

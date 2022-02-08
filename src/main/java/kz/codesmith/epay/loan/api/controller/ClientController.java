@@ -1,8 +1,12 @@
 package kz.codesmith.epay.loan.api.controller;
 
 import io.swagger.annotations.ApiOperation;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.core.shared.model.clients.ClientDto;
 import kz.codesmith.epay.core.shared.model.clients.ClientWithContactDto;
+import kz.codesmith.epay.loan.api.model.ClientChangeNameDto;
 import kz.codesmith.epay.loan.api.model.ClientEditDto;
 import kz.codesmith.epay.loan.api.service.ICoreClientService;
 import lombok.RequiredArgsConstructor;
@@ -55,5 +59,15 @@ public class ClientController {
   public ResponseEntity<ClientWithContactDto>
       updateClientProfile(@RequestBody ClientEditDto dto) {
     return ResponseEntity.ok(coreClientService.updateClientProfile(dto));
+  }
+
+  @ApiOperation(value = "Change client name", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasAnyAuthority('CLIENT_USER')")
+  @PutMapping("/clientname")
+  public ResponseEntity<ClientDto> changeClientName(
+      @NotNull @Valid @RequestBody ClientChangeNameDto dto,
+      HttpServletRequest request) {
+    String requestTokenHeader = request.getHeader("Authorization");
+    return ResponseEntity.ok(coreClientService.changeClientName(dto, requestTokenHeader));
   }
 }
