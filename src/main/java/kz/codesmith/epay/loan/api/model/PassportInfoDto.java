@@ -15,6 +15,7 @@ public class PassportInfoDto {
   private String lastName;
   private String patronymic;
   private LocalDate birthDate;
+  private String gender;
   private String nationalIdNumber;
   private String nationality;
   private String nationalIdIssuer;

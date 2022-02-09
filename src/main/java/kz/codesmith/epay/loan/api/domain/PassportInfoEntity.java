@@ -39,6 +39,9 @@ public class PassportInfoEntity {
   @Column(name = "birth_date")
   private LocalDate birthDate;
 
+  @Column(name = "gender")
+  private String gender;
+
   @Column(name = "national_id_number")
   private String nationalIdNumber;
 
