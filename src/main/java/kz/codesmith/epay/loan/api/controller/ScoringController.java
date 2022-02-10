@@ -15,6 +15,8 @@ import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.model.pkb.KdnScoreRequestDto;
+import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoConstants;
+import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringRequest;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResponse;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
@@ -89,6 +91,8 @@ public class ScoringController {
   public ResponseEntity<ScoringResponse> score(@Valid @RequestBody ScoringRequest request) {
 
     clientsService.checkRequestIinSameClientIin(request.getIin());
+
+    fillEmptyFormData(request.getPersonalInfo());
 
     loanService.addLoanRequestHistory(request);
 
@@ -220,6 +224,45 @@ public class ScoringController {
           .build();
       log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
       return ResponseEntity.ok(resp);
+    }
+  }
+
+  private void fillEmptyFormData(PersonalInfoDto personalInfoDto) {
+    if (Objects.isNull(personalInfoDto.getEducation())) {
+      personalInfoDto.setEducation(PersonalInfoConstants.education);
+    }
+    if (Objects.isNull(personalInfoDto.getEmployment())) {
+      personalInfoDto.setEmployment(PersonalInfoConstants.employment);
+    }
+    if (Objects.isNull(personalInfoDto.getTypeOfWork())) {
+      personalInfoDto.setTypeOfWork(PersonalInfoConstants.typeOfWork);
+    }
+    if (Objects.isNull(personalInfoDto.getWorkPosition())) {
+      personalInfoDto.setWorkPosition(PersonalInfoConstants.workPosition);
+    }
+    if (Objects.isNull(personalInfoDto.getEmployer())) {
+      personalInfoDto.setEmployer(PersonalInfoConstants.employer);
+    }
+    if (Objects.isNull(personalInfoDto.getMonthlyIncome())) {
+      personalInfoDto.setMonthlyIncome(PersonalInfoConstants.monthlyIncome);
+    }
+    if (Objects.isNull(personalInfoDto.getAdditionalMonthlyIncome())) {
+      personalInfoDto.setAdditionalMonthlyIncome(PersonalInfoConstants.additionalMonthlyIncome);
+    }
+    if (Objects.isNull(personalInfoDto.getWorkExperience())) {
+      personalInfoDto.setWorkExperience(PersonalInfoConstants.workExperience);
+    }
+    if (Objects.isNull(personalInfoDto.getWorkPhoneNum())) {
+      personalInfoDto.setWorkPhoneNum(PersonalInfoConstants.workPhoneNum);
+    }
+    if (Objects.isNull(personalInfoDto.getMaritalStatus())) {
+      personalInfoDto.setMaritalStatus(PersonalInfoConstants.maritalStatus);
+    }
+    if (Objects.isNull(personalInfoDto.getGender())) {
+      personalInfoDto.setGender(PersonalInfoConstants.gender);
+    }
+    if (Objects.isNull(personalInfoDto.getNumberOfKids())) {
+      personalInfoDto.setNumberOfKids(PersonalInfoConstants.numberOfKids);
     }
   }
 
