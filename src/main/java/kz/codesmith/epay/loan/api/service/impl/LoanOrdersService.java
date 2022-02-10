@@ -577,8 +577,11 @@ public class LoanOrdersService implements ILoanOrdersService {
     var date = order.getInsertedTime();
     valuesMap.put("date", dateFormatter.format(date));
     valuesMap.put("name", order.getClientInfo());
-    valuesMap.put("loanPurpose", "Нецелевое/ Мақсатты емес");
-    valuesMap.put("loanSecurity", "Без обеспечения (беззалоговый)/ Кепілдіксіз");
+    valuesMap.put("loanPurpose", "Потребительский, не связанный с осуществлением "
+        + "предпринимательской деятельности/Тұтынушылық, кәсіпкерлік"
+        + " қызметті жүзеге асырумен байланысты емес");
+    valuesMap.put("loanSecurity", "Без обеспечения (беззалоговый)/ "
+        + "Кепілдіксіз етусіз (кепілдіксіз)");
     valuesMap.put("amount", order.getLoanAmount());
     valuesMap.put("period", order.getLoanPeriodMonths());
     valuesMap.put("overpaymentAmount", "");
