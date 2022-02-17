@@ -40,6 +40,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
           .antMatcher("/system/**")
           .authorizeRequests()
           .antMatchers(HttpMethod.GET, "/actuator/**").permitAll()
+          .antMatchers(HttpMethod.GET, "/stop-factor-check/raw/**").permitAll()
           .antMatchers(
               HttpMethod.GET,
               "/v2/api-docs",
@@ -69,7 +70,8 @@ class SecurityConfig extends BaseSecurityConfiguration {
         "/swagger-resources/**", "/swagger-ui.html",
         "/webjars/**", "/v2/api-docs",
         "/",
-        "/csrf"
+        "/csrf",
+        "/stop-factor-check/raw/**"
     };
 
     @Override

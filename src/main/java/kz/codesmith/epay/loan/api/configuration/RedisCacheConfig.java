@@ -19,6 +19,7 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 public class RedisCacheConfig {
 
   public static final String PKB_CACHE_NAME = "pkb-cache";
+  public static final String PKB_STOP_FACTOR_CACHE_NAME = "pkb-stop-factor";
   private final PkbProperties pkbProperties;
 
   @Bean
@@ -30,6 +31,12 @@ public class RedisCacheConfig {
               .serializeValuesWith(RedisSerializationContext.SerializationPair
                   .fromSerializer(jackson2jsonRedisSerializer()))
               .entryTtl(pkbProperties.getCacheDurationTtl()));
+
+      configurationMap.put(
+          PKB_STOP_FACTOR_CACHE_NAME,
+          RedisCacheConfiguration.defaultCacheConfig()
+              .entryTtl(pkbProperties.getCacheDurationTtl())
+      );
       builder.withInitialCacheConfigurations(configurationMap);
     };
   }

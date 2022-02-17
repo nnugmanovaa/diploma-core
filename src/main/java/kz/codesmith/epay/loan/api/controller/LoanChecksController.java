@@ -41,4 +41,13 @@ public class LoanChecksController {
   public ResponseEntity<CheckResult> stopFactorLocalCheck(@PathVariable("iin") @Iin String iin) {
     return ResponseEntity.ok(checksService.stopFactorLocalCheck(iin));
   }
+
+  @ApiOperation(
+      value = "Check iin for stop factors, raw xml result",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @GetMapping(value = "/raw/{iin}")
+  public ResponseEntity<String> stopFactorCheckRaw(@PathVariable("iin") @Iin String iin) {
+    return ResponseEntity.ok(checksService.stopFactorCheckRaw(iin));
+  }
 }

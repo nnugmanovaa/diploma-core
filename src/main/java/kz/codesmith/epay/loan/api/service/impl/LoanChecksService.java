@@ -16,6 +16,7 @@ import kz.codesmith.epay.loan.api.model.pkb.PkbResponse;
 import kz.codesmith.epay.loan.api.repository.PkbChecksManagementRepository;
 import kz.codesmith.epay.loan.api.repository.PkbChecksResultHistoryRepository;
 import kz.codesmith.epay.loan.api.service.ILoanChecksService;
+import kz.codesmith.epay.loan.api.service.IPkbScoreService;
 import kz.codesmith.epay.ws.connector.utils.JaxBUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -34,6 +35,7 @@ public class LoanChecksService implements ILoanChecksService {
   private final PkbChecksManagementRepository pkbChecksManagementRepository;
   private final ModelMapper modelMapper;
   private final PkbChecksResultHistoryRepository pkbChecksResultHistoryRepository;
+  private final IPkbScoreService pkbScoreService;
 
   @Value("${integration.pkb.check-result-actual-days}")
   private int checkResultActualDays;
@@ -51,7 +53,7 @@ public class LoanChecksService implements ILoanChecksService {
       return new CheckResult(errors);
     }
 
-    String respString = pkbCheckRs.getCustomerInfoByIin(iin);
+    String respString = pkbScoreService.getCustomerInfoByIin(iin);
     PkbResponse resp = jaxBUtils.unmarshall(respString, PkbResponse.class);
 
     savePkbResponseToDB(resp);
@@ -94,6 +96,11 @@ public class LoanChecksService implements ILoanChecksService {
         }));
 
     return new CheckResult(errors);
+  }
+
+  @Override
+  public String stopFactorCheckRaw(String iin) {
+    return pkbScoreService.getCustomerInfoByIin(iin);
   }
 
   private List<Check> getChecksListFromResponse(PkbResponse resp) {

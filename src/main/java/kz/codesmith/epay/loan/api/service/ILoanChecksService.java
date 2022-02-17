@@ -8,4 +8,6 @@ public interface ILoanChecksService {
 
   CheckResult stopFactorLocalCheck(String iin);
 
+  String stopFactorCheckRaw(String iin);
+
 }

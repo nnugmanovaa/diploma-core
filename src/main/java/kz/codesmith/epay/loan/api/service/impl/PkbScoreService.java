@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import kz.codesmith.epay.loan.api.component.PkbCheckRs;
 import kz.codesmith.epay.loan.api.configuration.RedisCacheConfig;
 import kz.codesmith.epay.loan.api.configuration.pkb.PkbProperties;
 import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
@@ -26,10 +27,12 @@ import kz.com.fcb.fico.CigHeader;
 import kz.com.fcb.fico.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Logged
 @Service
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class PkbScoreService implements IPkbScoreService {
   private final com.fcb.closedcontracts.service.web.Service pkbClosedContractService;
   private final kz.com.fcb.fico.ScoreService wsPkbFicoService;
   private final ModelMapper modelMapper;
+  private final PkbCheckRs pkbCheckRs;
 
   @Override
   public List<ScoreCard> getScoreCards() {
@@ -136,6 +140,17 @@ public class PkbScoreService implements IPkbScoreService {
     return Optional.ofNullable(pkbClosedContractService.getContractSum(contractSum, cigWsHeader))
         .map(GetContractSumResponse::getReturn)
         .orElse(null);
+  }
+
+  @Cacheable(
+      value = RedisCacheConfig.PKB_STOP_FACTOR_CACHE_NAME,
+      key = "{#iin}",
+      unless = "#result == null"
+  )
+  @Override
+  public String getCustomerInfoByIin(String iin) {
+    log.info("PKB GET STOP-FACTORS for {}", iin);
+    return pkbCheckRs.getCustomerInfoByIin(iin);
   }
 
 }

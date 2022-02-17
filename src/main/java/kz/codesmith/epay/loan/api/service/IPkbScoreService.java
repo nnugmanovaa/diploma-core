@@ -26,4 +26,6 @@ public interface IPkbScoreService {
   );
 
   ServiceReturn getContractSum(String iin, boolean consentConfirmed);
+
+  String getCustomerInfoByIin(String iin);
 }
