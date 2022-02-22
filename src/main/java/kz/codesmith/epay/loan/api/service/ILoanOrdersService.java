@@ -4,13 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
+import kz.codesmith.epay.loan.api.domain.OrderScoringVariables;
 import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.halyk.HalyCallbackRequestDto;
 import kz.codesmith.epay.loan.api.model.halyk.HalykCardCashoutResponseDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
-import kz.codesmith.epay.loan.api.model.schedule.OrderDetailsSchedule;
 import kz.codesmith.epay.loan.api.model.schedule.OrderRepaymentSchedule;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringInfo;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringRequest;
@@ -119,4 +118,6 @@ public interface ILoanOrdersService {
   List<OrderDto> getAllCashedOutInitializedOrders();
 
   OrderRepaymentSchedule getLoanRepaymentDetails();
+
+  OrderDto updateScoringVariables(OrderScoringVariables variables);
 }

@@ -20,6 +20,7 @@ import kz.codesmith.epay.core.shared.model.exceptions.ApiErrorTypeParamValues;
 import kz.codesmith.epay.core.shared.model.exceptions.IllegalApiUsageGeneralApiException;
 import kz.codesmith.epay.core.shared.model.exceptions.NotFoundApiServerException;
 import kz.codesmith.epay.loan.api.component.DocumentGenerator;
+import kz.codesmith.epay.loan.api.domain.OrderScoringVariables;
 import kz.codesmith.epay.loan.api.domain.RepaymentScheduleEntity;
 import kz.codesmith.epay.loan.api.domain.ScheduleItemsEntity;
 import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
@@ -567,6 +568,17 @@ public class LoanOrdersService implements ILoanOrdersService {
         .hasActiveLoan(false)
         .message("Не найдено открытых микрокредитов")
         .build();
+  }
+
+  @Override
+  public OrderDto updateScoringVariables(OrderScoringVariables variables) {
+    var order = getOrder(variables.getOrderId());
+    order.setStatus(variables.getStatus());
+    order.setLoanEffectiveRate(variables.getLoanEffectiveRate());
+    order.setLoanInterestRate(variables.getLoanInterestRate());
+    order.setOrderExtRefId(variables.getOrderExtRefId());
+    order.setOrderExtRefTime(variables.getOrderExtRefTime());
+    return mapper.map(order, OrderDto.class);
   }
 
   private Map<String, Object> mapOrderEntity(OrderEntity order) {

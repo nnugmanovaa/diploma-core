@@ -3,46 +3,33 @@ package kz.codesmith.epay.loan.api.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiOperation;
-import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import kz.codesmith.epay.loan.api.model.pkb.KdnScoreRequestDto;
-import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoConstants;
-import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringRequest;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResponse;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
-import kz.codesmith.epay.loan.api.requirement.ScoringRequirement;
 import kz.codesmith.epay.loan.api.requirement.ScoringRequirementResult;
 import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
-import kz.codesmith.epay.loan.api.service.IClientsService;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
 import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
-import kz.codesmith.epay.loan.api.service.StorageService;
-import kz.codesmith.epay.loan.api.service.VariablesHolder;
-import kz.codesmith.epay.loan.api.service.impl.LoanService;
-import kz.codesmith.epay.loan.api.service.impl.ScoringVarsService;
+import kz.codesmith.epay.loan.api.service.IScoringService;
 import kz.codesmith.logger.Logged;
 import kz.codesmith.springboot.validators.iin.Iin;
-import kz.payintech.LoanSchedule;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.cxf.common.util.CollectionUtils;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -62,24 +49,14 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasAnyAuthority('MFO_ADMIN')")
 public class ScoringController {
 
-  private final LoanService loanService;
-  private final ScoringRequirement requirement;
   private final ScoringContext context;
   private final IPkbScoreService pkbScoreService;
   private final IAlternativeLoanCalculationService alternativeLoanCalculation;
   private final IMfoCoreService mfoCoreService;
   private final ILoanOrdersService ordersServices;
-  private final StorageService storageService;
-  private final ScoringVarsService scoringVarsService;
   private final ObjectMapper objectMapper;
-  private final IClientsService clientsService;
   private final IScoreVariablesService scoreVarService;
-
-  @Value("${scoring.iin.whitelist}")
-  private String iinWhiteList;
-
-  @Value("${scoring.iin.backlist}")
-  private String iinBlackList;
+  private final IScoringService scoringService;
 
   @SneakyThrows
   @ApiOperation(
@@ -89,181 +66,7 @@ public class ScoringController {
   @PostMapping(value = "/start-loan-process", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAnyAuthority('CLIENT_USER')")
   public ResponseEntity<ScoringResponse> score(@Valid @RequestBody ScoringRequest request) {
-
-    clientsService.checkRequestIinSameClientIin(request.getIin());
-
-    fillEmptyFormData(request.getPersonalInfo());
-
-    loanService.addLoanRequestHistory(request);
-
-    var order = ordersServices.createNewPrimaryLoanOrder(request);
-    MDC.put("loanOrderId", order.getOrderId().toString());
-
-    request.setLoanProduct(order.getLoanProduct());
-    context.setVariablesHolder(
-        new VariablesHolder(
-            scoringVarsService.getScoringVarsMap(),
-            objectMapper
-        )
-    );
-    context.setRequestData(request);
-    List<OrderDto> orderDtos = ordersServices
-        .findAllOpenAlternativeLoansByIin(context.getRequestData().getIin());
-
-    if (!CollectionUtils.isEmpty(orderDtos)) {
-      return getRejectOrderResponse(order, "Need to repay issued alternative loans");
-    }
-    request.setWhiteList(Stream.of(iinWhiteList.split(","))
-        .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
-
-    request.setBlackList(Stream.of(iinBlackList.split(","))
-        .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
-    var result = requirement.check(context);
-
-    order = ordersServices.updateScoringInfo(
-        order.getOrderId(),
-        context.getScoringInfo()
-    );
-
-    var loanEffectiveRate = Optional.ofNullable(context.getLoanSchedule())
-        .map(LoanSchedule::getEffectiveRate)
-        .map(BigDecimal::valueOf)
-        .orElse(null);
-    var loanInterestRate = Optional.ofNullable(context.getInterestRate())
-        .orElse(null);
-
-    if (ScoringResult.APPROVED.equals(result.getResult())) {
-      order = ordersServices.updateLoanOrderStatusAndLoanEffectiveRate(
-          order.getOrderId(),
-          OrderState.APPROVED,
-          loanInterestRate,
-          loanEffectiveRate
-      );
-
-      var orderResponse = mfoCoreService.getNewOrder(order);
-      order = ordersServices.updateLoanOrderExtRefs(
-          order.getOrderId(),
-          orderResponse.getNumber(),
-          orderResponse.getDateTime()
-      );
-
-      var contract = mfoCoreService.getNewContract(order);
-      var key = order.getIin() + "/contract-" + order.getOrderId() + "-"
-          + order.getOrderExtRefId() + "-" + order.getOrderExtRefTime() + ".pdf";
-      storageService.put(
-          key,
-          new ByteArrayInputStream(Base64.decodeBase64(contract.getContract())),
-          MediaType.APPLICATION_PDF_VALUE
-      );
-      order = ordersServices.updateLoanOrderContractRefs(
-          order.getOrderId(),
-          key,
-          contract.getNumber(),
-          contract.getDateTime()
-      );
-      var resp = ScoringResponse.builder()
-          .result(result.getResult())
-          .orderId(order.getOrderId())
-          .orderTime(order.getInsertedTime())
-          .rejectText(result.getErrorsString(","))
-          .effectiveRate(order.getLoanEffectiveRate())
-          .build();
-      log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
-      return ResponseEntity.ok(resp);
-
-    } else if (ScoringResult.ALTERNATIVE.equals(result.getResult())) {
-      log.info("Scoring Result for orderId={} iin={} is ALTERNATIVE. Going to calc alternatives",
-          order.getOrderId(), order.getIin());
-
-      Double costOfLiving = scoreVarService.getValue(ScoringVars.COST_OF_LIVING, Double.class);
-
-      if (Objects.nonNull(context.getMaxLoanAmount())
-          && context.getMaxLoanAmount()
-          .equals(BigDecimal.valueOf(costOfLiving))) {
-        log.info("Minimal alternative suggested {}, for client={}", costOfLiving, request.getIin());
-        return returnMinAlternative(order, result, costOfLiving, loanEffectiveRate);
-      }
-
-      var rejectReason = result.getErrorsString(",");
-      order.setLoanEffectiveRate(loanEffectiveRate);
-      var alternatives = alternativeLoanCalculation.calculateAlternative(context);
-
-      if (Objects.nonNull(alternatives) && !alternatives.isEmpty()) {
-        log.info("{} alternatives calculated", alternatives.size());
-        order = ordersServices.rejectLoanOrder(
-            order.getOrderId(),
-            OrderState.ALTERNATIVE,
-            rejectReason
-        );
-        alternatives = ordersServices.createNewAlternativeLoanOrders(order, alternatives);
-        var resp = ScoringResponse.builder()
-            .result(result.getResult())
-            .orderId(order.getOrderId())
-            .orderTime(order.getInsertedTime())
-            .rejectText(rejectReason)
-            .alternativeChoices(alternatives)
-            .effectiveRate(order.getLoanEffectiveRate())
-            .build();
-
-        log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
-        return ResponseEntity.ok(resp);
-
-      } else {
-        return getRejectOrderResponse(order, rejectReason);
-      }
-    } else {
-      var rejectReason = result.getErrorsString(",");
-      order = ordersServices.rejectLoanOrder(order.getOrderId(), rejectReason);
-
-      var resp = ScoringResponse.builder()
-          .result(result.getResult())
-          .orderId(order.getOrderId())
-          .orderTime(order.getInsertedTime())
-          .rejectText(rejectReason)
-          .effectiveRate(order.getLoanEffectiveRate())
-          .build();
-      log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
-      return ResponseEntity.ok(resp);
-    }
-  }
-
-  private void fillEmptyFormData(PersonalInfoDto personalInfoDto) {
-    if (Objects.isNull(personalInfoDto.getEducation())) {
-      personalInfoDto.setEducation(PersonalInfoConstants.education);
-    }
-    if (Objects.isNull(personalInfoDto.getEmployment())) {
-      personalInfoDto.setEmployment(PersonalInfoConstants.employment);
-    }
-    if (Objects.isNull(personalInfoDto.getTypeOfWork())) {
-      personalInfoDto.setTypeOfWork(PersonalInfoConstants.typeOfWork);
-    }
-    if (Objects.isNull(personalInfoDto.getWorkPosition())) {
-      personalInfoDto.setWorkPosition(PersonalInfoConstants.workPosition);
-    }
-    if (Objects.isNull(personalInfoDto.getEmployer())) {
-      personalInfoDto.setEmployer(PersonalInfoConstants.employer);
-    }
-    if (Objects.isNull(personalInfoDto.getMonthlyIncome())) {
-      personalInfoDto.setMonthlyIncome(PersonalInfoConstants.monthlyIncome);
-    }
-    if (Objects.isNull(personalInfoDto.getAdditionalMonthlyIncome())) {
-      personalInfoDto.setAdditionalMonthlyIncome(PersonalInfoConstants.additionalMonthlyIncome);
-    }
-    if (Objects.isNull(personalInfoDto.getWorkExperience())) {
-      personalInfoDto.setWorkExperience(PersonalInfoConstants.workExperience);
-    }
-    if (Objects.isNull(personalInfoDto.getWorkPhoneNum())) {
-      personalInfoDto.setWorkPhoneNum(PersonalInfoConstants.workPhoneNum);
-    }
-    if (Objects.isNull(personalInfoDto.getMaritalStatus())) {
-      personalInfoDto.setMaritalStatus(PersonalInfoConstants.maritalStatus);
-    }
-    if (Objects.isNull(personalInfoDto.getGender())) {
-      personalInfoDto.setGender(PersonalInfoConstants.gender);
-    }
-    if (Objects.isNull(personalInfoDto.getNumberOfKids())) {
-      personalInfoDto.setNumberOfKids(PersonalInfoConstants.numberOfKids);
-    }
+    return ResponseEntity.ok(scoringService.score(request));
   }
 
   private ResponseEntity<ScoringResponse> returnMinAlternative(OrderDto order,
