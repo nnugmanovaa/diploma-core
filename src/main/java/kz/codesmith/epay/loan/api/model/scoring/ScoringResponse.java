@@ -26,4 +26,5 @@ public class ScoringResponse {
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
   private LocalDateTime orderTime;
   private BigDecimal effectiveRate;
+  private ScoringInfo scoringInfo;
 }

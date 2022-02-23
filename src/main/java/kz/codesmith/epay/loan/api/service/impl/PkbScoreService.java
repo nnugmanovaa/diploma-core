@@ -11,14 +11,21 @@ import com.creditinfo.ws.score.ScoreService;
 import com.fcb.closedcontracts.service.web.GetContractSum;
 import com.fcb.closedcontracts.service.web.GetContractSumResponse;
 import com.fcb.closedcontracts.service.web.ServiceReturn;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import kz.codesmith.epay.loan.api.component.PkbCheckRs;
+import kz.codesmith.epay.loan.api.configuration.PkbConnectorProperties;
 import kz.codesmith.epay.loan.api.configuration.RedisCacheConfig;
 import kz.codesmith.epay.loan.api.configuration.pkb.PkbProperties;
+import kz.codesmith.epay.loan.api.model.PkbReportsDto;
+import kz.codesmith.epay.loan.api.model.PkbReportsRequest;
+import kz.codesmith.epay.loan.api.model.exception.KdnReportFailedException;
 import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
+import kz.codesmith.epay.loan.api.model.exception.PkbConnectorReportsFailedException;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.ApplicationReport;
 import kz.codesmith.epay.loan.api.model.pkb.ws.ApplicationReportDto;
 import kz.codesmith.epay.loan.api.model.pkb.ws.KdnReqResponseDto;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
@@ -28,9 +35,15 @@ import kz.com.fcb.fico.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Logged
@@ -45,6 +58,8 @@ public class PkbScoreService implements IPkbScoreService {
   private final kz.com.fcb.fico.ScoreService wsPkbFicoService;
   private final ModelMapper modelMapper;
   private final PkbCheckRs pkbCheckRs;
+  private final PkbConnectorProperties pkbConnectorProperties;
+  private final RestTemplate restTemplate;
 
   @Override
   public List<ScoreCard> getScoreCards() {
@@ -153,4 +168,78 @@ public class PkbScoreService implements IPkbScoreService {
     return pkbCheckRs.getCustomerInfoByIin(iin);
   }
 
+  @Override
+  public ApplicationReport getKdnReport(
+      kz.codesmith.epay.loan.api.model.pkb.kdn.KdnRequest kdnRequest) {
+    var url = pkbConnectorProperties.getUrl() + "/kdn";
+    var requestEntity = HttpEntity.EMPTY;
+
+    var username = pkbConnectorProperties.getUsername();
+    var password = pkbConnectorProperties.getPassword();
+
+    if (StringUtils.isNotBlank(username)) {
+      requestEntity = new HttpEntity(kdnRequest, authHeaders(username, password));
+    } else {
+      requestEntity = new HttpEntity<>(kdnRequest);
+    }
+
+    log.info("HTTP PUT {} payload: {}", url, kdnRequest);
+    var response = restTemplate.exchange(
+        url,
+        HttpMethod.PUT,
+        requestEntity,
+        ApplicationReport.class
+    );
+
+    if (response.getStatusCode().is2xxSuccessful()) {
+      ApplicationReport report = response.getBody();
+      if (Objects.nonNull(report.getErrorCode()) && "4".equals(report.getErrorCode())) {
+        log.info("PKB kdn response {}", report.getErrorMessage());
+        throw new KdnReportFailedException("Failed to get KDN score");
+      }
+      if (Objects.nonNull(report)) {
+        return report;
+      }
+    }
+    throw new KdnReportFailedException("Failed to get KDN score");
+  }
+
+  @Override
+  public PkbReportsDto getAllPkbReports(PkbReportsRequest request) {
+    var url = pkbConnectorProperties.getUrl() + "/credit-report/all";
+    var requestEntity = HttpEntity.EMPTY;
+
+    var username = pkbConnectorProperties.getUsername();
+    var password = pkbConnectorProperties.getPassword();
+
+    if (StringUtils.isNotBlank(username)) {
+      requestEntity = new HttpEntity(request, authHeaders(username, password));
+    } else {
+      requestEntity = new HttpEntity<>(request);
+    }
+
+    try {
+      var response = restTemplate
+          .postForEntity(url, requestEntity, PkbReportsDto.class);
+      if (response.getStatusCode().is2xxSuccessful() && Objects.nonNull(response.getBody())) {
+        return response.getBody();
+      }
+    } catch (Exception e) {
+      log.error("Failed to get pkb reports from pkb-connector");
+      throw new PkbConnectorReportsFailedException("Pkb-Connector report request failed");
+    }
+    log.error("Failed to get pkb reports from pkb-connector");
+    throw new PkbConnectorReportsFailedException("Pkb-Connector report request failed");
+  }
+
+  private HttpHeaders authHeaders(String username, String password) {
+    return new HttpHeaders() {
+      {
+        String auth = username + ":" + password;
+        byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
+        String authHeader = "Basic " + new String(encodedAuth);
+        set("Authorization", authHeader);
+      }
+    };
+  }
 }

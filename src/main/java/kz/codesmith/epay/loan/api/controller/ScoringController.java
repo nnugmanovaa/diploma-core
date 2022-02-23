@@ -58,6 +58,9 @@ public class ScoringController {
   private final IScoreVariablesService scoreVarService;
   private final IScoringService scoringService;
 
+  @Value("${scoring.useOwnScore}")
+  private boolean useOwnScore;
+
   @SneakyThrows
   @ApiOperation(
       value = "Start client loan process",
@@ -66,7 +69,13 @@ public class ScoringController {
   @PostMapping(value = "/start-loan-process", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAnyAuthority('CLIENT_USER')")
   public ResponseEntity<ScoringResponse> score(@Valid @RequestBody ScoringRequest request) {
-    return ResponseEntity.ok(scoringService.score(request));
+    ScoringResponse scoringResponse;
+    if (useOwnScore) {
+      scoringResponse = scoringService.startLoanProcess(request);
+    } else {
+      scoringResponse = scoringService.score(request);
+    }
+    return ResponseEntity.ok(scoringResponse);
   }
 
   private ResponseEntity<ScoringResponse> returnMinAlternative(OrderDto order,

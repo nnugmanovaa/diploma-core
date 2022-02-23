@@ -3,24 +3,43 @@ package kz.codesmith.epay.loan.api.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import kz.codesmith.epay.loan.api.configuration.ScoringProperties;
 import kz.codesmith.epay.loan.api.domain.OrderScoringVariables;
+import kz.codesmith.epay.loan.api.model.PkbReportsDto;
+import kz.codesmith.epay.loan.api.model.PkbReportsRequest;
+import kz.codesmith.epay.loan.api.model.exception.KdnReportFailedException;
+import kz.codesmith.epay.loan.api.model.exception.PkbConnectorReportsFailedException;
+import kz.codesmith.epay.loan.api.model.exception.ScoringUnreachableException;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.ApplicationReport;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.Data;
+import kz.codesmith.epay.loan.api.model.pkb.kdn.KdnRequest;
+import kz.codesmith.epay.loan.api.model.scoring.AlternativeLoanParams;
+import kz.codesmith.epay.loan.api.model.scoring.AlternativeRejectionReason;
+import kz.codesmith.epay.loan.api.model.scoring.OwnScoringResponseDto;
 import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoUtils;
+import kz.codesmith.epay.loan.api.model.scoring.RejectionReason;
+import kz.codesmith.epay.loan.api.model.scoring.ScoringInfo;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringRequest;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResponse;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
+import kz.codesmith.epay.loan.api.model.scoring.ScoringResultDto;
+import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
+import kz.codesmith.epay.loan.api.model.scoring.StartScoringRequest;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.requirement.ScoringRequirement;
-import kz.codesmith.epay.loan.api.requirement.ScoringRequirementResult;
 import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
 import kz.codesmith.epay.loan.api.service.IClientsService;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
+import kz.codesmith.epay.loan.api.service.IPkbScoreService;
 import kz.codesmith.epay.loan.api.service.IScoringService;
 import kz.codesmith.epay.loan.api.service.StorageService;
 import kz.codesmith.epay.loan.api.service.VariablesHolder;
@@ -32,15 +51,16 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.cxf.common.util.CollectionUtils;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Slf4j
 @Logged
 @Service
 @RequiredArgsConstructor
 public class ScoringServiceImpl implements IScoringService {
-  private final IClientsService clientsService;
   private final LoanService loanService;
   private final ILoanOrdersService ordersServices;
   private final ScoringContext context;
@@ -50,12 +70,188 @@ public class ScoringServiceImpl implements IScoringService {
   private final IMfoCoreService mfoCoreService;
   private final StorageService storageService;
   private final IAlternativeLoanCalculationService alternativeLoanCalculation;
+  private final IPkbScoreService pkbScoreService;
+  private final ScoringProperties scoringProperties;
+  private final IClientsService clientsService;
+  private final RestTemplate restTemplate;
 
   @Value("${scoring.iin.whitelist}")
   private String iinWhiteList;
 
   @Value("${scoring.iin.backlist}")
   private String iinBlackList;
+
+  @Override
+  public ScoringResultDto processOwnScoring(ScoringRequest request, OrderDto order) {
+
+    var kdnRequest = fillKdnRequest(request);
+    try {
+      ApplicationReport kdnReport;
+      if (scoringProperties.isEnabled()) {
+        kdnReport = pkbScoreService.getKdnReport(kdnRequest);
+      } else {
+        kdnReport = new ApplicationReport();
+        kdnReport.setKdnScore(0.3);
+        kdnReport.setIncome(100000d);
+        kdnReport.setDebt(10d);
+      }
+      var kdnScore = kdnReport.getKdnScore();
+
+      saveClientIncomesInfo(kdnReport);
+
+      log.info("PKB KDN is {}", kdnScore);
+
+      var debt = new BigDecimal(kdnReport.getDebt());
+      var income = new BigDecimal(kdnReport.getIncome());
+      context.getScoringInfo().setKdn(kdnScore);
+      context.getScoringInfo().setDebt(debt);
+      context.getScoringInfo().setIncome(income);
+
+      if (kdnScore >= scoringProperties.getMaxKdn()) {
+        log.info("(kdnScore >= maxKdn) {} >= {}", kdnScore, scoringProperties.getMaxKdn());
+        return fillFailedResponse(RejectionReason.KDN_TOO_BIG);
+      }
+
+      PkbReportsDto pkbReportsDto = pkbScoreService
+          .getAllPkbReports(PkbReportsRequest.builder()
+              .iin(request.getIin())
+              .kdnRequest(kdnRequest)
+          .build());
+
+      OwnScoringResponseDto scoringResponse;
+      if (scoringProperties.isEnabled()) {
+        var scoringRequest = fillScoringRequest(request, pkbReportsDto);
+        scoringResponse = getScore(scoringRequest);
+      } else {
+        String mockedResponse = "{\"client_id\":\"1\",\"date_application\":\"Df\",\"decil\":\"7\","
+            + "\"result\":\"OK\",\"score\":\"535.0\"}";
+        scoringResponse = objectMapper
+            .readValue(mockedResponse, OwnScoringResponseDto.class);
+      }
+
+      Integer decil = scoringResponse.getDecil();
+      log.info("DECIL: {}, for: {}", decil, scoringResponse.getClientId());
+
+      context.getScoringInfo()
+          .setDecil(decil);
+      context.getScoringInfo()
+          .setOwnScore(scoringResponse.getScore());
+
+      if (decil > scoringProperties.getMaxDecil()) {
+        log.info("(decil >= maxDecil) {} >= {}", decil, scoringProperties.getMaxDecil());
+        return fillFailedResponse(RejectionReason.DECIL_TOO_BIG);
+      }
+      log.info("Going to calculate new kdn for {}", request.getIin());
+
+      /**
+       * нужно изменить loanInterestRate
+       */
+      var loanInterestRate = scoringProperties.getInterestRate();
+
+      LoanSchedule loanSchedule = getLoanSchuduleCalculation(request, loanInterestRate);
+      context.setLoanSchedule(loanSchedule);
+      context.setInterestRate(BigDecimal
+          .valueOf(loanInterestRate));
+
+      var maxGesv = context.getVariablesHolder().getValue(ScoringVars.MAX_GESV, Double.class);
+
+      log.info(
+          "Effective Rate Check [loanEffectiveRate={} maxGesv={}]",
+          loanSchedule.getEffectiveRate(),
+          maxGesv
+      );
+
+      if (loanSchedule.getEffectiveRate() > maxGesv) {
+        return fillFailedResponse(RejectionReason.BAD_EFFECTIVE_RATE);
+      }
+
+      var period = new BigDecimal(request.getLoanPeriod());
+      var avgMonthlyPayment = context
+          .getLoanSchedule()
+          .getTotalAmountToBePaid()
+          .divide(period, 2, RoundingMode.HALF_UP);
+      var newKdn = avgMonthlyPayment
+          .add(debt)
+          .divide(income, 2, RoundingMode.HALF_UP);
+      context.getScoringInfo().setNewKdn(newKdn);
+      log.info("New KDN is {}", newKdn);
+
+      if (newKdn.doubleValue() > scoringProperties.getMaxKdn()) {
+        log.info("(newKdn > maxKdn) {} > {}. return AlternativeRejectionReason.NEW_KDN_TOO_BIG",
+            newKdn, scoringProperties.getMaxKdn());
+        context.setAlternativeLoanParams(new AlternativeLoanParams(income, debt));
+        return ScoringResultDto.builder()
+            .scoringResult(ScoringResult.ALTERNATIVE)
+            .message(AlternativeRejectionReason
+                .NEW_KDN_TOO_BIG.description())
+            .build();
+      }
+      return ScoringResultDto.builder()
+          .scoringResult(ScoringResult.APPROVED)
+          .message("OK")
+          .build();
+    } catch (KdnReportFailedException e) {
+      return fillFailedResponse(RejectionReason.KDN_INCOME_OR_DEBT_UNAVAILABLE);
+    } catch (PkbConnectorReportsFailedException e) {
+      return fillFailedResponse(RejectionReason.LOAD_PKB_REPORTS_FAILED);
+    } catch (Exception e) {
+      return fillFailedResponse(RejectionReason.SCORING_ERRORS);
+    }
+  }
+
+  private void saveClientIncomesInfo(ApplicationReport kdnReport) {
+    Data deductionsData;
+    if (kdnReport != null
+        && kdnReport.getIncomesResultCrtrV2() != null
+        && kdnReport.getIncomesResultCrtrV2().getResult() != null
+        && kdnReport.getIncomesResultCrtrV2().getResult().getResponseData() != null) {
+
+      deductionsData = kdnReport.getIncomesResultCrtrV2()
+          .getResult()
+          .getResponseData()
+          .getData();
+      context.getScoringInfo().setIncomesInfo(
+          objectMapper.convertValue(deductionsData, Map.class));
+    }
+  }
+
+  private KdnRequest fillKdnRequest(ScoringRequest request) {
+    return KdnRequest.builder()
+        .iin(request.getIin())
+        .birthdate(request.getPersonalInfo().getBirthDate())
+        .firstname(request.getPersonalInfo().getFirstName())
+        .lastname(request.getPersonalInfo().getLastName())
+        .middlename(request.getPersonalInfo().getMiddleName())
+        .build();
+  }
+
+  private StartScoringRequest fillScoringRequest(ScoringRequest request,
+      PkbReportsDto pkbReportsDto) {
+    return StartScoringRequest.builder()
+        .fullReport(pkbReportsDto.getFullReport())
+        .standardReport(pkbReportsDto.getStandardReport())
+        .incomeReport(pkbReportsDto.getIncomeReport())
+        .loanAmount(request.getLoanAmount())
+        .loanPeriod(request.getLoanPeriod())
+        .iin(request.getIin())
+        .build();
+  }
+
+  private LoanSchedule getLoanSchuduleCalculation(ScoringRequest request, float loanInterestRate) {
+    return mfoCoreService.getLoanScheduleCalculation(
+        BigDecimal.valueOf(request.getLoanAmount()),
+        request.getLoanPeriod(),
+        loanInterestRate,
+        request.getLoanProduct(),
+        request.getLoanMethod());
+  }
+
+  private ScoringResultDto fillFailedResponse(RejectionReason reason) {
+    return ScoringResultDto.builder()
+        .scoringResult(ScoringResult.REFUSED)
+        .message(reason.description())
+        .build();
+  }
 
   @Override
   public ScoringResponse score(ScoringRequest request) {
@@ -65,10 +261,8 @@ public class ScoringServiceImpl implements IScoringService {
 
     loanService.addLoanRequestHistory(request);
 
-    var order = ordersServices.createNewPrimaryLoanOrder(request);
-    MDC.put("loanOrderId", order.getOrderId().toString());
+    OrderDto order = createNewScoringLoanOrder(request);
 
-    request.setLoanProduct(order.getLoanProduct());
     context.setVariablesHolder(
         new VariablesHolder(
             scoringVarsService.getScoringVarsMap(),
@@ -97,28 +291,85 @@ public class ScoringServiceImpl implements IScoringService {
         .orElse(null);
 
     if (ScoringResult.APPROVED.equals(result.getResult())) {
-      return processApprovedLoan(order, result, loanEffectiveRate, loanInterestRate);
+      return processApprovedLoan(order, loanEffectiveRate,
+          loanInterestRate, result.getErrorsString(","));
 
     } else if (ScoringResult.ALTERNATIVE.equals(result.getResult())) {
       log.info("Scoring Result for orderId={} iin={} is ALTERNATIVE. Going to calc alternatives",
           order.getOrderId(), order.getIin());
-      return processAlternativeLoan(request, order, result, loanEffectiveRate);
+      return processAlternativeLoan(order, loanEffectiveRate);
     }
     var rejectReason = result.getErrorsString(",");
     return processRejectedLoan(order, rejectReason);
+  }
+
+  @Override
+  public ScoringResponse startLoanProcess(ScoringRequest request) {
+    clientsService.checkRequestIinSameClientIin(request.getIin());
+
+    PersonalInfoUtils.fillEmptyFormData(request.getPersonalInfo());
+
+    loanService.addLoanRequestHistory(request);
+
+    OrderDto order = createNewScoringLoanOrder(request);
+
+    context.setVariablesHolder(
+        new VariablesHolder(
+            scoringVarsService.getScoringVarsMap(),
+            objectMapper
+        )
+    );
+    context.setRequestData(request);
+    ScoringResultDto scoringResultDto = processOwnScoring(request, order);
+
+    order = ordersServices.updateScoringInfo(
+        order.getOrderId(),
+        context.getScoringInfo()
+    );
+
+    var loanEffectiveRate = Optional.ofNullable(context.getLoanSchedule())
+        .map(LoanSchedule::getEffectiveRate)
+        .map(BigDecimal::valueOf)
+        .orElse(null);
+    var loanInterestRate = Optional.ofNullable(context.getInterestRate())
+        .orElse(null);
+
+    switch (scoringResultDto.getScoringResult()) {
+      case APPROVED: {
+        return processApprovedLoan(order, loanEffectiveRate,
+            loanInterestRate, scoringResultDto.getMessage());
+      }
+      case ALTERNATIVE: {
+        return processAlternativeLoan(order, loanEffectiveRate);
+      }
+      case REFUSED: {
+        return processRejectedLoan(order, scoringResultDto.getMessage());
+      }
+      default: {
+        throw new IllegalStateException();
+      }
+    }
+  }
+
+  private OrderDto createNewScoringLoanOrder(ScoringRequest request) {
+    var order = ordersServices.createNewPrimaryLoanOrder(request);
+    MDC.put("loanOrderId", order.getOrderId().toString());
+    request.setLoanProduct(order.getLoanProduct());
+    return order;
   }
 
   private ScoringResponse processRejectedLoan(OrderDto order, String rejectReason) {
     ScoringResponse resp = new ScoringResponse();
     try {
       order = ordersServices.rejectLoanOrder(order.getOrderId(), rejectReason);
-
+      ScoringInfo scoringInfo = getScoringInfo();
       resp = ScoringResponse.builder()
           .result(ScoringResult.REFUSED)
           .orderId(order.getOrderId())
           .orderTime(order.getInsertedTime())
           .rejectText(rejectReason)
           .effectiveRate(order.getLoanEffectiveRate())
+          .scoringInfo(scoringInfo)
           .build();
       log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
     } catch (Exception e) {
@@ -127,13 +378,12 @@ public class ScoringServiceImpl implements IScoringService {
     return resp;
   }
 
-  private ScoringResponse processAlternativeLoan(ScoringRequest request,
-      OrderDto order,
-      ScoringRequirementResult result,
+  private ScoringResponse processAlternativeLoan(OrderDto order,
       BigDecimal loanEffectiveRate) {
     ScoringResponse resp = new ScoringResponse();
     try {
-      var rejectReason = result.getErrorsString(",");
+      var rejectReason = AlternativeRejectionReason.NEW_KDN_TOO_BIG
+          .description();
       order.setLoanEffectiveRate(loanEffectiveRate);
       var alternatives = alternativeLoanCalculation
           .calculateAlternative(context);
@@ -146,13 +396,15 @@ public class ScoringServiceImpl implements IScoringService {
             rejectReason
         );
         alternatives = ordersServices.createNewAlternativeLoanOrders(order, alternatives);
+        ScoringInfo scoringInfo = getScoringInfo();
         resp = ScoringResponse.builder()
-            .result(result.getResult())
+            .result(ScoringResult.ALTERNATIVE)
             .orderId(order.getOrderId())
             .orderTime(order.getInsertedTime())
             .rejectText(rejectReason)
             .alternativeChoices(alternatives)
             .effectiveRate(order.getLoanEffectiveRate())
+            .scoringInfo(scoringInfo)
             .build();
 
         log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
@@ -166,9 +418,9 @@ public class ScoringServiceImpl implements IScoringService {
   }
 
   private ScoringResponse processApprovedLoan(OrderDto order,
-      ScoringRequirementResult result,
       BigDecimal loanEffectiveRate,
-      BigDecimal loanInterestRate) {
+      BigDecimal loanInterestRate,
+      String message) {
     ScoringResponse resp = new ScoringResponse();
     try {
       var orderResponse = mfoCoreService.getNewOrder(order);
@@ -195,12 +447,14 @@ public class ScoringServiceImpl implements IScoringService {
           contract.getNumber(),
           contract.getDateTime()
       );
+      ScoringInfo scoringInfo = getScoringInfo();
       resp = ScoringResponse.builder()
-          .result(result.getResult())
+          .result(ScoringResult.APPROVED)
           .orderId(order.getOrderId())
           .orderTime(order.getInsertedTime())
-          .rejectText(result.getErrorsString(","))
+          .rejectText(message)
           .effectiveRate(order.getLoanEffectiveRate())
+          .scoringInfo(scoringInfo)
           .build();
       log.info("Scoring Final Response: {}", objectMapper.writeValueAsString(resp));
     } catch (Exception e) {
@@ -209,11 +463,35 @@ public class ScoringServiceImpl implements IScoringService {
     return resp;
   }
 
+  private ScoringInfo getScoringInfo() {
+    ScoringInfo scoringInfo = context.getScoringInfo();
+    scoringInfo.setIncomesInfo(null);
+    return scoringInfo;
+  }
+
   private void checkIfIinMocked(ScoringRequest request) {
     request.setWhiteList(Stream.of(iinWhiteList.split(","))
         .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
 
     request.setBlackList(Stream.of(iinBlackList.split(","))
         .anyMatch(iin -> iin.equalsIgnoreCase(request.getIin())));
+  }
+
+  private OwnScoringResponseDto getScore(StartScoringRequest request) {
+    var requestEntity = new HttpEntity<>(request);
+    try {
+      var response = restTemplate
+          .postForEntity(scoringProperties.getOwnScoreUrl(),
+              requestEntity,
+              OwnScoringResponseDto.class);
+      if (response.getStatusCode().is2xxSuccessful() && Objects.nonNull(response.getBody())) {
+        return response.getBody();
+      }
+    } catch (Exception e) {
+      log.error("Unexpected exception: ", e);
+      throw new ScoringUnreachableException(e.getMessage());
+    }
+    throw new ScoringUnreachableException(RejectionReason
+        .SCORING_ERRORS.description());
   }
 }

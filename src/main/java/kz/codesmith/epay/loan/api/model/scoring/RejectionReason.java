@@ -7,11 +7,13 @@ public enum RejectionReason implements Reason {
   BAD_EFFECTIVE_RATE("effective rate core did not pass the check"),
   NO_ABILITY_TO_PAY("income is less than cost of living"),
   NO_PREVIOUS_HIST_AND_DEDUCTIONS("no previous credit history and deductions found"),
-  KDN_INCOME_OR_DEBT_UNAVAILABLE("could not calculate new kdn"),
+  KDN_INCOME_OR_DEBT_UNAVAILABLE("kdn income or debt unavailable"),
   KDN_TOO_BIG("KDN score is bigger than expected"),
   PREVIOUS_OVERDUES("There are overdue payments in last months"),
   PREVIOUS_OVERDUES_CHECK_FAILED("Can't check overdues due to missing report for subj"),
-  SCORING_ERRORS("Errors occurred during scoring process. Check logs.");
+  SCORING_ERRORS("Errors occurred during scoring process. Check logs."),
+  DECIL_TOO_BIG("DECIL score is bigger than expected"),
+  LOAD_PKB_REPORTS_FAILED("Could not load pkb reports");
 
   private final String description;
 

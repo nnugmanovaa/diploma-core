@@ -17,4 +17,7 @@ public class ScoringInfo {
   private double maxContractSum;
   private boolean hasOverdue;
   private Map<String, Object> incomesInfo;
+  private int decil;
+  //new score result (score 2.0)
+  private double ownScore;
 }
