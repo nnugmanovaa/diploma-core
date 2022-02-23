@@ -84,7 +84,7 @@ public class ScoringServiceImpl implements IScoringService {
   @Override
   public ScoringResultDto processOwnScoring(ScoringRequest request, OrderDto order) {
 
-    var kdnRequest = fillKdnRequest(request);
+    /*var kdnRequest = fillKdnRequest(request);
     try {
       ApplicationReport kdnReport;
       if (scoringProperties.isEnabled()) {
@@ -110,8 +110,10 @@ public class ScoringServiceImpl implements IScoringService {
       if (kdnScore >= scoringProperties.getMaxKdn()) {
         log.info("(kdnScore >= maxKdn) {} >= {}", kdnScore, scoringProperties.getMaxKdn());
         return fillFailedResponse(RejectionReason.KDN_TOO_BIG);
-      }
+      }*/
 
+    try {
+      var kdnRequest = fillKdnRequest(request);
       PkbReportsDto pkbReportsDto = pkbScoreService
           .getAllPkbReports(PkbReportsRequest.builder()
               .iin(request.getIin())
@@ -127,6 +129,21 @@ public class ScoringServiceImpl implements IScoringService {
             + "\"result\":\"OK\",\"score\":\"535.0\"}";
         scoringResponse = objectMapper
             .readValue(mockedResponse, OwnScoringResponseDto.class);
+      }
+
+      var kdnScore = scoringResponse.getKdn();
+
+      log.info("PKB KDN is {}", kdnScore);
+
+      var debt = new BigDecimal(scoringResponse.getDebt());
+      var income = new BigDecimal(scoringResponse.getIncome());
+      context.getScoringInfo().setKdn(kdnScore);
+      context.getScoringInfo().setDebt(debt);
+      context.getScoringInfo().setIncome(income);
+
+      if (kdnScore >= scoringProperties.getMaxKdn()) {
+        log.info("(kdnScore >= maxKdn) {} >= {}", kdnScore, scoringProperties.getMaxKdn());
+        return fillFailedResponse(RejectionReason.KDN_TOO_BIG);
       }
 
       Integer decil = scoringResponse.getDecil();

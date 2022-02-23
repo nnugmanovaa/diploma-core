@@ -1,6 +1,8 @@
 package kz.codesmith.epay.loan.api.model.scoring;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,4 +25,13 @@ public class OwnScoringResponseDto {
 
   @JsonProperty("score")
   private Double score;
+
+  @JsonProperty("kdn")
+  private Double kdn;
+
+  @JsonProperty("income")
+  private String income;
+
+  @JsonProperty("debt")
+  private String debt;
 }
