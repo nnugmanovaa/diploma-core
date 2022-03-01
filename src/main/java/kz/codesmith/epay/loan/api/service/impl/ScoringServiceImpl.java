@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import kz.codesmith.epay.loan.api.configuration.ScoringProperties;
 import kz.codesmith.epay.loan.api.domain.OrderScoringVariables;
+import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.model.PkbReportsDto;
 import kz.codesmith.epay.loan.api.model.PkbReportsRequest;
 import kz.codesmith.epay.loan.api.model.exception.KdnReportFailedException;
@@ -33,6 +35,7 @@ import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResultDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.model.scoring.StartScoringRequest;
+import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.requirement.ScoringRequirement;
 import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
@@ -74,12 +77,16 @@ public class ScoringServiceImpl implements IScoringService {
   private final ScoringProperties scoringProperties;
   private final IClientsService clientsService;
   private final RestTemplate restTemplate;
+  private final LoanOrdersRepository loanOrdersRepository;
 
   @Value("${scoring.iin.whitelist}")
   private String iinWhiteList;
 
   @Value("${scoring.iin.backlist}")
   private String iinBlackList;
+
+  private static final List<OrderState> CASHED_OUT_STATES = Arrays
+      .asList(OrderState.CASHED_OUT_CARD, OrderState.CASHED_OUT_WALLET);
 
   @Override
   public ScoringResultDto processOwnScoring(ScoringRequest request, OrderDto order) {
@@ -287,10 +294,12 @@ public class ScoringServiceImpl implements IScoringService {
         )
     );
     context.setRequestData(request);
-    List<OrderDto> orderDtos = ordersServices
-        .findAllOpenAlternativeLoansByIin(context.getRequestData().getIin());
-    if (!CollectionUtils.isEmpty(orderDtos)) {
-      return processRejectedLoan(order, "Need to repay issued alternative loans");
+    if (scoringProperties.isCheckOpenLoans()) {
+      List<OrderEntity> orders = loanOrdersRepository
+          .findAllByIinAndStatusIn(context.getRequestData().getIin(), CASHED_OUT_STATES);
+      if (!CollectionUtils.isEmpty(orders)) {
+        return processRejectedLoan(order, "Need to repay issued loans");
+      }
     }
 
     checkIfIinMocked(request);
@@ -337,6 +346,14 @@ public class ScoringServiceImpl implements IScoringService {
         )
     );
     context.setRequestData(request);
+    if (scoringProperties.isCheckOpenLoans()) {
+      List<OrderEntity> orders = loanOrdersRepository
+          .findAllByIinAndStatusIn(context.getRequestData().getIin(), CASHED_OUT_STATES);
+      if (!CollectionUtils.isEmpty(orders)) {
+        return processRejectedLoan(order, "Need to repay issued loans");
+      }
+    }
+
     ScoringResultDto scoringResultDto = processOwnScoring(request, order);
 
     order = ordersServices.updateScoringInfo(
