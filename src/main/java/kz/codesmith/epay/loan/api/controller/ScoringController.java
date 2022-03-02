@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiOperation;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import kz.codesmith.epay.core.shared.model.exceptions.accounts.UserIsBlockedApiServerException;
+import kz.codesmith.epay.loan.api.domain.BlockedUserEntity;
 import kz.codesmith.epay.loan.api.model.AlternativeChoiceDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
@@ -19,6 +22,7 @@ import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.requirement.ScoringRequirementResult;
 import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
+import kz.codesmith.epay.loan.api.service.IBlockedUserService;
 import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.codesmith.epay.loan.api.service.IPkbScoreService;
@@ -57,6 +61,7 @@ public class ScoringController {
   private final ObjectMapper objectMapper;
   private final IScoreVariablesService scoreVarService;
   private final IScoringService scoringService;
+  private final IBlockedUserService blockedUserService;
 
   @Value("${scoring.useOwnScore}")
   private boolean useOwnScore;
@@ -69,6 +74,12 @@ public class ScoringController {
   @PostMapping(value = "/start-loan-process", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasAnyAuthority('CLIENT_USER')")
   public ResponseEntity<ScoringResponse> score(@Valid @RequestBody ScoringRequest request) {
+    BlockedUserEntity blockedUser = blockedUserService
+        .findBlockedUserByIin(request.getIin());
+    if (Objects.nonNull(blockedUser)) {
+      throw new UserIsBlockedApiServerException(String
+          .format("Client with iin %s, blocked", request.getIin()));
+    }
     ScoringResponse scoringResponse;
     if (useOwnScore) {
       scoringResponse = scoringService.startLoanProcess(request);
