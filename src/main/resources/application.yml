@@ -158,6 +158,7 @@ scoring:
   interestRate: ${LOAN_INTERESTRATE:56}
   ownScoreUrl: '${OWN_SCORE_URL:http://mfo-scoring.pitech.ext:5000/scoring}'
   checkOpenLoans: ${CHECK_OPEN_LOANS:true}
+  pdlMaxInterestRate: ${PDL_MAX_INTERESTRATE:24.5}
 s3-storage:
   endpoint-url: '${S3_ENDPOINT_URL:https://object.pscloud.io}'
   access-key: '${S3_ACCESS_KEY:MTTZXDH2CQVD07UHABOE}'

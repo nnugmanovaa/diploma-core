@@ -183,8 +183,7 @@ public class LoanOrdersService implements ILoanOrdersService {
     orderEntity.setLoanEffectiveRate(orderEntity.getLoanEffectiveRate());
     orderEntity.setLoanMethod(request.getLoanMethod().name());
     orderEntity.setLoanPeriodMonths(request.getLoanPeriod());
-    orderEntity.setLoanProduct(request.getLoanMethod().equals(ListLoanMethod.ANNUITY_PAYMENTS)
-        ? "000000004" : "000000005");
+    orderEntity.setLoanProduct(getLoanProduct(request.getLoanMethod()));
     orderEntity.setMsisdn(userContext.getUsername());
     orderEntity.setOrderType(OrderType.PRIMARY);
     orderEntity.setStatus(OrderState.NEW);
@@ -689,5 +688,19 @@ public class LoanOrdersService implements ILoanOrdersService {
             ApiErrorTypeParamValues.ORDER,
             orderId
         ));
+  }
+
+  private String getLoanProduct(ListLoanMethod loanMethod) {
+    switch (loanMethod) {
+      case ANNUITY_PAYMENTS: {
+        return "000000004";
+      }
+      case REPAYMENT_DEBT_INTEREST_END_PERIOD: {
+        return "000000007";
+      }
+      default: {
+        return "000000005";
+      }
+    }
   }
 }

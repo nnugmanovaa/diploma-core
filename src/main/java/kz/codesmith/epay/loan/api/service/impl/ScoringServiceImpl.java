@@ -47,6 +47,7 @@ import kz.codesmith.epay.loan.api.service.IScoringService;
 import kz.codesmith.epay.loan.api.service.StorageService;
 import kz.codesmith.epay.loan.api.service.VariablesHolder;
 import kz.codesmith.logger.Logged;
+import kz.payintech.ListLoanMethod;
 import kz.payintech.LoanSchedule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -167,27 +168,34 @@ public class ScoringServiceImpl implements IScoringService {
       }
       log.info("Going to calculate new kdn for {}", request.getIin());
 
-      /**
-       * нужно изменить loanInterestRate
-       */
-      var loanInterestRate = scoringProperties.getInterestRate();
 
-      LoanSchedule loanSchedule = getLoanSchuduleCalculation(request, loanInterestRate);
+      float loanInterestRate;
+      LoanSchedule loanSchedule;
+
+      if (!request.getLoanMethod()
+          .equals(ListLoanMethod.REPAYMENT_DEBT_INTEREST_END_PERIOD)) {
+        loanInterestRate = scoringProperties.getInterestRate();
+        loanSchedule = getLoanSchuduleCalculation(request, loanInterestRate);
+        var maxGesv = context.getVariablesHolder().getValue(ScoringVars.MAX_GESV, Double.class);
+
+        log.info(
+            "Effective Rate Check [loanEffectiveRate={} maxGesv={}]",
+            loanSchedule.getEffectiveRate(),
+            maxGesv
+        );
+
+        if (loanSchedule.getEffectiveRate() > maxGesv) {
+          return fillFailedResponse(RejectionReason.BAD_EFFECTIVE_RATE);
+        }
+      } else {
+        loanInterestRate = request.getLoanPeriod() <= 30
+            ? (scoringProperties.getPdlMaxInterestRate() / 30)
+            : (scoringProperties.getPdlMaxInterestRate() / request.getLoanPeriod());
+        loanSchedule = getLoanSchuduleCalculation(request, loanInterestRate);
+      }
       context.setLoanSchedule(loanSchedule);
       context.setInterestRate(BigDecimal
           .valueOf(loanInterestRate));
-
-      var maxGesv = context.getVariablesHolder().getValue(ScoringVars.MAX_GESV, Double.class);
-
-      log.info(
-          "Effective Rate Check [loanEffectiveRate={} maxGesv={}]",
-          loanSchedule.getEffectiveRate(),
-          maxGesv
-      );
-
-      if (loanSchedule.getEffectiveRate() > maxGesv) {
-        return fillFailedResponse(RejectionReason.BAD_EFFECTIVE_RATE);
-      }
 
       var period = new BigDecimal(request.getLoanPeriod());
       var avgMonthlyPayment = context

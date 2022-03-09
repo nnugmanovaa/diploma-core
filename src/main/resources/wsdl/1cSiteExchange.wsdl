@@ -1,159 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
-	xmlns:soap12bind="http://schemas.xmlsoap.org/wsdl/soap12/"
-	xmlns:soapbind="http://schemas.xmlsoap.org/wsdl/soap/"
-	xmlns:tns="siteexchange.payintech.kz"
-	xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
-	xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns:xsd1="http://www.payintech.kz"
-	xmlns:xsd2="siteexchange.payintech.kz"
-	name="SiteExchange"
-	targetNamespace="siteexchange.payintech.kz">
+		xmlns:soap12bind="http://schemas.xmlsoap.org/wsdl/soap12/"
+		xmlns:soapbind="http://schemas.xmlsoap.org/wsdl/soap/"
+		xmlns:tns="siteexchange.payintech.kz"
+		xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
+		xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		xmlns:xsd1="http://www.payintech.kz"
+		xmlns:xsd2="siteexchange.payintech.kz"
+		name="SiteExchange"
+		targetNamespace="siteexchange.payintech.kz">
 	<types>
 		<xs:schema xmlns:tns="http://www.payintech.kz"
-			xmlns:xs="http://www.w3.org/2001/XMLSchema"
-			targetNamespace="http://www.payintech.kz"
-			attributeFormDefault="unqualified"
-			elementFormDefault="qualified">
+				xmlns:xs="http://www.w3.org/2001/XMLSchema"
+				targetNamespace="http://www.payintech.kz"
+				attributeFormDefault="unqualified"
+				elementFormDefault="qualified">
 			<xs:complexType name="Address">
 				<xs:sequence>
 					<xs:element name="Country"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Region"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="City"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Street"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="House"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Apartment"
-						type="xs:string"/>
+							type="xs:string"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="Client">
 				<xs:sequence>
 					<xs:element name="Surname"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Name"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Middlename"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="email"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Phone"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="IIN"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="birthday"
-						type="xs:date"/>
+							type="xs:date"/>
 					<xs:element name="gender"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="IDType"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="IDCard"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="IDSeries"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="IDCardValidity"
-						type="xs:date"/>
+							type="xs:date"/>
 					<xs:element name="IDCardDateIssue"
-						type="xs:date"/>
+							type="xs:date"/>
 					<xs:element name="IDCardIssuingAuthority"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="RegionKATO"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="ResidenceAddress"
-						type="tns:Address"/>
+							type="tns:Address"/>
 					<xs:element name="RegistrationAddress"
-						type="tns:Address"/>
+							type="tns:Address"/>
 					<xs:element name="work"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="workname"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="dohod"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="workaddress"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="workposition"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="workphone"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Relative"
-						type="tns:ContactFaces"/>
+							type="tns:ContactFaces"/>
 					<xs:element name="Colleague"
-						type="tns:ContactFaces"/>
+							type="tns:ContactFaces"/>
 					<xs:element name="BankAccountNumber"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="BankBIC"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="BankName"
-						type="xs:string"/>
+							type="xs:string"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ContactFaces">
 				<xs:sequence>
 					<xs:element name="NameContact"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="PhoneContact"
-						type="xs:string"/>
+							type="xs:string"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="DataRowLoanSchedule">
 				<xs:sequence>
 					<xs:element name="Number"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="MonthPayment"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="PaymentDate"
-						type="xs:date"/>
+							type="xs:date"/>
 					<xs:element name="MainDebt"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="Reward"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="CommissionObtainingLoan"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="CommissionServicingLoan"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="TotalAmountDebt"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="AmountToBePaid"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="Insurance"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="InformationByRowSchedule">
 				<xs:sequence>
 					<xs:element name="DatePayment"
-						type="xs:date"/>
+							type="xs:date"/>
 					<xs:element name="AmountPayment"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="AmountPaid"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="DaysOverdue"
-						type="xs:integer"/>
+							type="xs:integer"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="InformationSchedule">
 				<xs:sequence>
 					<xs:element name="RowSchedule"
-						type="tns:InformationByRowSchedule"
-						minOccurs="0"
-						maxOccurs="unbounded"/>
+							type="tns:InformationByRowSchedule"
+							minOccurs="0"
+							maxOccurs="unbounded"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="InformationTheAgreement">
 				<xs:sequence>
 					<xs:element name="Date"
-						type="xs:dateTime"/>
+							type="xs:dateTime"/>
 					<xs:element name="Number"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="LoanTerm"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="LoanAmount"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="Status">
 						<xs:simpleType>
 							<xs:restriction base="xs:string">
@@ -171,21 +171,21 @@
 						</xs:simpleType>
 					</xs:element>
 					<xs:element name="BalanceMainDebt"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="Reward"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="AmountPenalty"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="DaysOverdue"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="LoanMethod"
-						type="tns:ListLoanMethod"/>
+							type="tns:ListLoanMethod"/>
 					<xs:element name="LoanInterestRate"
-						type="xs:float"/>
+							type="xs:float"/>
 					<xs:element name="EffectiveRate"
-						type="xs:float"/>
+							type="xs:float"/>
 					<xs:element name="PaymentSchedule"
-						type="tns:InformationSchedule"/>
+							type="tns:InformationSchedule"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:simpleType name="ListLoanMethod">
@@ -194,203 +194,207 @@
 					<xs:enumeration value="AnnuityPaymentsWithGracePeriod"/>
 					<xs:enumeration value="MonthlyPrincipalDebtRepaymentEqualShares"/>
 					<xs:enumeration value="Undefined"/>
+					<xs:enumeration value="RepaymentMainDebtGracePeriod"/>
+					<xs:enumeration value="RepaymentDebtEndTerm"/>
+					<xs:enumeration value="CustomRepaymentScheme"/>
+					<xs:enumeration value="RepaymentDebtInterestEndPeriod"/>
 				</xs:restriction>
 			</xs:simpleType>
 			<xs:complexType name="LoanSchedule">
 				<xs:sequence>
 					<xs:element name="OneTimeCommissionObtainingLoan"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="OneTimeCommissionServicingLoan"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="OneTimeInsurance"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="EffectiveRate"
-						type="xs:float"/>
+							type="xs:float"/>
 					<xs:element name="AmountOverpayment"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="TotalAmountToBePaid"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="RowLoanSchedule"
-						type="tns:DataRowLoanSchedule"
-						minOccurs="0"
-						maxOccurs="unbounded"/>
+							type="tns:DataRowLoanSchedule"
+							minOccurs="0"
+							maxOccurs="unbounded"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="NewOrder">
 				<xs:sequence>
 					<xs:element name="Client"
-						type="tns:Client"/>
+							type="tns:Client"/>
 					<xs:element name="LoanTerm"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="LoanAmount"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="CredProd"
-						type="xs:string"/>
+							type="xs:string"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultDataNumberDate">
 				<xs:sequence>
 					<xs:element name="Number"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="DateTime"
-						type="xs:dateTime"/>
+							type="xs:dateTime"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultDataPDF">
 				<xs:sequence>
 					<xs:element name="Contract"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Schedule"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Number"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="DateTime"
-						type="xs:dateTime"/>
+							type="xs:dateTime"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponse">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						maxOccurs="unbounded"/>
+							maxOccurs="unbounded"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetLoanScheduleCalculation">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:LoanSchedule"/>
+							type="tns:LoanSchedule"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetNewContract">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:ResultDataPDF"/>
+							type="tns:ResultDataPDF"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetNewOrder">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:ResultDataNumberDate"/>
+							type="tns:ResultDataNumberDate"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetSummPaymentSchedule">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:SummPaymentSchedule"
-						maxOccurs="unbounded"/>
+							type="tns:SummPaymentSchedule"
+							maxOccurs="unbounded"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetTotalDebt">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:TotalDebt"/>
+							type="tns:TotalDebt"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetUserContractsList">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:InformationTheAgreement"
-						maxOccurs="unbounded"/>
+							type="tns:InformationTheAgreement"
+							maxOccurs="unbounded"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsegetUserOrderList">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Data"
-						type="tns:UserOrderList"
-						maxOccurs="unbounded"/>
+							type="tns:UserOrderList"
+							maxOccurs="unbounded"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="ResultResponsesendBorrowerSignature">
 				<xs:sequence>
 					<xs:element name="Result"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="Error"
-						type="xs:string"/>
+							type="xs:string"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="SummPaymentSchedule">
 				<xs:sequence>
 					<xs:element name="Number"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="DateTime"
-						type="xs:dateTime"/>
+							type="xs:dateTime"/>
 					<xs:element name="ScheduledLoanDate"
-						type="xs:date"/>
+							type="xs:date"/>
 					<xs:element name="AmountLoan"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="TotalDebt">
 				<xs:sequence>
 					<xs:element name="BalanceMainDebt"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="Reward"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="AmountPenalty"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 					<xs:element name="AmountFine"
-						type="xs:decimal"/>
+							type="xs:decimal"/>
 				</xs:sequence>
 			</xs:complexType>
 			<xs:complexType name="UserOrderList">
 				<xs:sequence>
 					<xs:element name="DateTime"
-						type="xs:dateTime"/>
+							type="xs:dateTime"/>
 					<xs:element name="Number"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="LoanMethod"
-						type="xs:string"/>
+							type="xs:string"/>
 					<xs:element name="LoanTerm"
-						type="xs:integer"/>
+							type="xs:integer"/>
 					<xs:element name="LoanAmount"
-						type="xs:float"/>
+							type="xs:float"/>
 					<xs:element name="Status"
-						type="xs:string"/>
+							type="xs:string"/>
 				</xs:sequence>
 			</xs:complexType>
 		</xs:schema>
 		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-			xmlns:xs1="http://www.payintech.kz"
-			xmlns:xs2="siteexchange.payintech.kz"
-			targetNamespace="siteexchange.payintech.kz"
-			elementFormDefault="qualified">
+				xmlns:xs1="http://www.payintech.kz"
+				xmlns:xs2="siteexchange.payintech.kz"
+				targetNamespace="siteexchange.payintech.kz"
+				elementFormDefault="qualified">
 			<xs:import namespace="http://www.payintech.kz"/>
 			<xs:element name="TestConnection">
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="p"
-							type="xs:string"/>
+								type="xs:string"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -398,7 +402,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs:string"/>
+								type="xs:string"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -406,7 +410,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="IIN"
-							type="xs:string"/>
+								type="xs:string"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -414,7 +418,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetUserOrderList"/>
+								type="xs1:ResultResponsegetUserOrderList"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -422,7 +426,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="IIN"
-							type="xs:string"/>
+								type="xs:string"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -430,7 +434,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetUserContractsList"/>
+								type="xs1:ResultResponsegetUserContractsList"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -438,7 +442,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="Data"
-							type="xs1:NewOrder"/>
+								type="xs1:NewOrder"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -446,7 +450,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetNewOrder"/>
+								type="xs1:ResultResponsegetNewOrder"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -454,9 +458,9 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="Data"
-							type="xs1:ResultDataNumberDate"/>
+								type="xs1:ResultDataNumberDate"/>
 						<xs:element name="LoanInterestRate"
-							type="xs:float"/>
+								type="xs:float"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -464,7 +468,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetNewContract"/>
+								type="xs1:ResultResponsegetNewContract"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -472,7 +476,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="Data"
-							type="xs1:ResultDataNumberDate"/>
+								type="xs1:ResultDataNumberDate"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -480,7 +484,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsesendBorrowerSignature"/>
+								type="xs1:ResultResponsesendBorrowerSignature"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -488,17 +492,17 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="Summ"
-							type="xs:decimal"/>
+								type="xs:decimal"/>
 						<xs:element name="CreditTerm"
-							type="xs:integer"/>
+								type="xs:integer"/>
 						<xs:element name="LoanInterestRate"
-							type="xs:float"/>
+								type="xs:float"/>
 						<xs:element name="CreditProduct"
-							type="xs:string"/>
+								type="xs:string"/>
 						<xs:element name="LoanMethod"
-							type="xs1:ListLoanMethod"/>
+								type="xs1:ListLoanMethod"/>
 						<xs:element name="Date"
-							type="xs:date"/>
+								type="xs:date"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -506,7 +510,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetLoanScheduleCalculation"/>
+								type="xs1:ResultResponsegetLoanScheduleCalculation"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -514,7 +518,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="IIN"
-							type="xs:string"/>
+								type="xs:string"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -522,7 +526,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetTotalDebt"/>
+								type="xs1:ResultResponsegetTotalDebt"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -530,7 +534,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="IIN"
-							type="xs:string"/>
+								type="xs:string"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -538,7 +542,7 @@
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="return"
-							type="xs1:ResultResponsegetSummPaymentSchedule"/>
+								type="xs1:ResultResponsegetSummPaymentSchedule"/>
 					</xs:sequence>
 				</xs:complexType>
 			</xs:element>
@@ -546,75 +550,75 @@
 	</types>
 	<message name="TestConnectionRequestMessage">
 		<part name="parameters"
-			element="tns:TestConnection"/>
+				element="tns:TestConnection"/>
 	</message>
 	<message name="TestConnectionResponseMessage">
 		<part name="parameters"
-			element="tns:TestConnectionResponse"/>
+				element="tns:TestConnectionResponse"/>
 	</message>
 	<message name="getUserOrderListRequestMessage">
 		<part name="parameters"
-			element="tns:getUserOrderList"/>
+				element="tns:getUserOrderList"/>
 	</message>
 	<message name="getUserOrderListResponseMessage">
 		<part name="parameters"
-			element="tns:getUserOrderListResponse"/>
+				element="tns:getUserOrderListResponse"/>
 	</message>
 	<message name="getUserContractsListRequestMessage">
 		<part name="parameters"
-			element="tns:getUserContractsList"/>
+				element="tns:getUserContractsList"/>
 	</message>
 	<message name="getUserContractsListResponseMessage">
 		<part name="parameters"
-			element="tns:getUserContractsListResponse"/>
+				element="tns:getUserContractsListResponse"/>
 	</message>
 	<message name="getNewOrderRequestMessage">
 		<part name="parameters"
-			element="tns:getNewOrder"/>
+				element="tns:getNewOrder"/>
 	</message>
 	<message name="getNewOrderResponseMessage">
 		<part name="parameters"
-			element="tns:getNewOrderResponse"/>
+				element="tns:getNewOrderResponse"/>
 	</message>
 	<message name="getNewContractRequestMessage">
 		<part name="parameters"
-			element="tns:getNewContract"/>
+				element="tns:getNewContract"/>
 	</message>
 	<message name="getNewContractResponseMessage">
 		<part name="parameters"
-			element="tns:getNewContractResponse"/>
+				element="tns:getNewContractResponse"/>
 	</message>
 	<message name="sendBorrowerSignatureRequestMessage">
 		<part name="parameters"
-			element="tns:sendBorrowerSignature"/>
+				element="tns:sendBorrowerSignature"/>
 	</message>
 	<message name="sendBorrowerSignatureResponseMessage">
 		<part name="parameters"
-			element="tns:sendBorrowerSignatureResponse"/>
+				element="tns:sendBorrowerSignatureResponse"/>
 	</message>
 	<message name="getLoanScheduleCalculationRequestMessage">
 		<part name="parameters"
-			element="tns:getLoanScheduleCalculation"/>
+				element="tns:getLoanScheduleCalculation"/>
 	</message>
 	<message name="getLoanScheduleCalculationResponseMessage">
 		<part name="parameters"
-			element="tns:getLoanScheduleCalculationResponse"/>
+				element="tns:getLoanScheduleCalculationResponse"/>
 	</message>
 	<message name="getTotalDebtRequestMessage">
 		<part name="parameters"
-			element="tns:getTotalDebt"/>
+				element="tns:getTotalDebt"/>
 	</message>
 	<message name="getTotalDebtResponseMessage">
 		<part name="parameters"
-			element="tns:getTotalDebtResponse"/>
+				element="tns:getTotalDebtResponse"/>
 	</message>
 	<message name="getSummPaymentScheduleRequestMessage">
 		<part name="parameters"
-			element="tns:getSummPaymentSchedule"/>
+				element="tns:getSummPaymentSchedule"/>
 	</message>
 	<message name="getSummPaymentScheduleResponseMessage">
 		<part name="parameters"
-			element="tns:getSummPaymentScheduleResponse"/>
+				element="tns:getSummPaymentScheduleResponse"/>
 	</message>
 	<portType name="SiteExchangePortType">
 		<operation name="TestConnection">
@@ -655,12 +659,12 @@
 		</operation>
 	</portType>
 	<binding name="SiteExchangeSoapBinding"
-		type="tns:SiteExchangePortType">
+			type="tns:SiteExchangePortType">
 		<soapbind:binding style="document"
-			transport="http://schemas.xmlsoap.org/soap/http"/>
+				transport="http://schemas.xmlsoap.org/soap/http"/>
 		<operation name="TestConnection">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:TestConnection"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:TestConnection"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -670,7 +674,7 @@
 		</operation>
 		<operation name="getUserOrderList">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getUserOrderList"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getUserOrderList"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -680,7 +684,7 @@
 		</operation>
 		<operation name="getUserContractsList">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getUserContractsList"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getUserContractsList"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -690,7 +694,7 @@
 		</operation>
 		<operation name="getNewOrder">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getNewOrder"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getNewOrder"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -700,7 +704,7 @@
 		</operation>
 		<operation name="getNewContract">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getNewContract"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getNewContract"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -710,7 +714,7 @@
 		</operation>
 		<operation name="sendBorrowerSignature">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:sendBorrowerSignature"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:sendBorrowerSignature"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -720,7 +724,7 @@
 		</operation>
 		<operation name="getLoanScheduleCalculation">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getLoanScheduleCalculation"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getLoanScheduleCalculation"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -730,7 +734,7 @@
 		</operation>
 		<operation name="getTotalDebt">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getTotalDebt"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getTotalDebt"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -740,7 +744,7 @@
 		</operation>
 		<operation name="getSummPaymentSchedule">
 			<soapbind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getSummPaymentSchedule"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getSummPaymentSchedule"/>
 			<input>
 				<soapbind:body use="literal"/>
 			</input>
@@ -750,12 +754,12 @@
 		</operation>
 	</binding>
 	<binding name="SiteExchangeSoap12Binding"
-		type="tns:SiteExchangePortType">
+			type="tns:SiteExchangePortType">
 		<soap12bind:binding style="document"
-			transport="http://schemas.xmlsoap.org/soap/http"/>
+				transport="http://schemas.xmlsoap.org/soap/http"/>
 		<operation name="TestConnection">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:TestConnection"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:TestConnection"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -765,7 +769,7 @@
 		</operation>
 		<operation name="getUserOrderList">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getUserOrderList"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getUserOrderList"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -775,7 +779,7 @@
 		</operation>
 		<operation name="getUserContractsList">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getUserContractsList"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getUserContractsList"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -785,7 +789,7 @@
 		</operation>
 		<operation name="getNewOrder">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getNewOrder"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getNewOrder"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -795,7 +799,7 @@
 		</operation>
 		<operation name="getNewContract">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getNewContract"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getNewContract"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -805,7 +809,7 @@
 		</operation>
 		<operation name="sendBorrowerSignature">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:sendBorrowerSignature"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:sendBorrowerSignature"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -815,7 +819,7 @@
 		</operation>
 		<operation name="getLoanScheduleCalculation">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getLoanScheduleCalculation"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getLoanScheduleCalculation"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -825,7 +829,7 @@
 		</operation>
 		<operation name="getTotalDebt">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getTotalDebt"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getTotalDebt"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -835,7 +839,7 @@
 		</operation>
 		<operation name="getSummPaymentSchedule">
 			<soap12bind:operation style="document"
-				soapAction="siteexchange.payintech.kz#SiteExchange:getSummPaymentSchedule"/>
+					soapAction="siteexchange.payintech.kz#SiteExchange:getSummPaymentSchedule"/>
 			<input>
 				<soap12bind:body use="literal"/>
 			</input>
@@ -846,15 +850,15 @@
 	</binding>
 	<service name="SiteExchange">
 		<port name="SiteExchangeSoap"
-			binding="tns:SiteExchangeSoapBinding">
-			<documentation>
+				binding="tns:SiteExchangeSoapBinding">
+			<documentation> 
 				<wsi:Claim xmlns:wsi="http://ws-i.org/schemas/conformanceClaim/"
-					conformsTo="http://ws-i.org/profiles/basic/1.1"/>
+						conformsTo="http://ws-i.org/profiles/basic/1.1"/>
 			</documentation>
 			<soapbind:address location="http://mfo.payintech.kz/DEMO_MFO_pintech/ws/SiteExchange"/>
 		</port>
 		<port name="SiteExchangeSoap12"
-			binding="tns:SiteExchangeSoap12Binding">
+				binding="tns:SiteExchangeSoap12Binding">
 			<soap12bind:address location="http://mfo.payintech.kz/DEMO_MFO_pintech/ws/SiteExchange"/>
 		</port>
 	</service>
