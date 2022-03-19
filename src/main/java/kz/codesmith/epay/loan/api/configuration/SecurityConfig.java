@@ -10,6 +10,7 @@ import kz.codesmith.epay.security.component.JwtTokenUtil;
 import kz.codesmith.epay.security.configuration.BaseSecurityConfiguration;
 import kz.codesmith.logger.request.XrequestId;
 import lombok.RequiredArgsConstructor;
+import org.apache.http.protocol.HTTP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -41,6 +42,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
           .authorizeRequests()
           .antMatchers(HttpMethod.GET, "/actuator/**").permitAll()
           .antMatchers(HttpMethod.GET, "/stop-factor-check/raw/**").permitAll()
+          .antMatchers(HttpMethod.GET, "/pkb/**").permitAll()
           .antMatchers(
               HttpMethod.GET,
               "/v2/api-docs",
@@ -79,6 +81,7 @@ class SecurityConfig extends BaseSecurityConfiguration {
       http.csrf().disable().cors(Customizer.withDefaults())
           .authorizeRequests()
           .antMatchers(HttpMethod.GET, permittedUrls).permitAll()
+          .antMatchers(HttpMethod.GET, "/pkb/**").permitAll()
           .antMatchers(HttpMethod.POST, "/halyk/callback").permitAll()
           .antMatchers(HttpMethod.POST, "/acquiring/callback").permitAll()
           .antMatchers(HttpMethod.GET, "/public/client/**").permitAll()

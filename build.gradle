@@ -275,7 +275,7 @@ ext {
 
     useJacksonXml = {
         dependencies {
-            implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.10.3'
+            implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.11.1'
         }
     }
 
@@ -370,6 +370,7 @@ useThymeleafPdf()
 useSuperCsv()
 useSpringAmqp()
 useTestNg()
+useJacksonXml()
 
 checkstyle {
     toolVersion = "${checkStyleToolVersion}"

@@ -72,7 +72,7 @@ integration:
     cacheDurationTtl: ${INTEGRATION_PKB_CACHE_DURATION_TTL:PT10M}
     service-timeout: ${INTEGRATION_PKB_SERVICE_TIMEOUT:190000}
   pkb-connector:
-    url: ${INTEGRATION_PKB_CONNECTOR_URL:http://pkb-connector/api}
+    url: ${INTEGRATION_PKB_CONNECTOR_URL:http://localhost:8080/api}
     username: ${INTEGRATION_PKB_CONNECTOR_USERNAME:}
     password: ${INTEGRATION_PKB_CONNECTOR_PASSWORD:}
   mfo.core:
