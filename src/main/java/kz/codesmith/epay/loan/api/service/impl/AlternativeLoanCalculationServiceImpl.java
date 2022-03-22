@@ -11,7 +11,6 @@ import kz.codesmith.epay.loan.api.model.exception.MfoGeneralApiException;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IAlternativeLoanCalculationService;
-import kz.codesmith.epay.loan.api.service.ILoanOrdersService;
 import kz.codesmith.epay.loan.api.service.IMfoCoreService;
 import kz.payintech.ListLoanMethod;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ public class AlternativeLoanCalculationServiceImpl implements
     IAlternativeLoanCalculationService {
 
   private final IMfoCoreService mfoCoreService;
-  private final ILoanOrdersService loanOrdersService;
 
   @Value("${scoring.max-kdn}")
   private double maxKdn;

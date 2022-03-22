@@ -2,7 +2,6 @@ package kz.codesmith.epay.loan.api.configuration;
 
 import java.util.Arrays;
 import java.util.Collections;
-import kz.codesmith.epay.loan.api.configuration.payout.PayoutProperties;
 import kz.codesmith.epay.security.component.JwtAuthenticationEntryPoint;
 import kz.codesmith.epay.security.component.JwtAuthenticationFilter;
 import kz.codesmith.epay.security.component.JwtAuthorizationFilter;
@@ -138,35 +137,4 @@ class SecurityConfig extends BaseSecurityConfiguration {
     }
   }
 
-  @Configuration
-  @Order(2)
-  @RequiredArgsConstructor
-  public static class PayoutCallbackConfig extends WebSecurityConfigurerAdapter {
-    private final PayoutProperties payoutProperties;
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-      http
-          .csrf().disable()
-          .antMatcher("/payout/callback")
-          .authorizeRequests().anyRequest().authenticated()
-          .and()
-          .httpBasic();
-    }
-
-    @Override
-    public void configure(AuthenticationManagerBuilder builder)
-        throws Exception {
-      builder.inMemoryAuthentication()
-          .passwordEncoder(passwordEncoder())
-          .withUser(payoutProperties.getUsername())
-          .password(payoutProperties.getPassword())
-          .roles("USER");
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-      return new BCryptPasswordEncoder();
-    }
-  }
 }
