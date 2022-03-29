@@ -427,6 +427,7 @@ dependencies {
     implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.0.1'
     implementation group: 'commons-io', name: 'commons-io', version: '2.6'
     implementation 'org.springframework.boot:spring-boot-starter-ws:1.4.7.RELEASE'
+    implementation 'kz.codesmith.epay:lib-security:0.0.2-RELEASE'
 
     compile("wsdl4j:wsdl4j:1.6.1")
     jaxb("com.sun.xml.bind:jaxb-xjc:2.2.4-1")

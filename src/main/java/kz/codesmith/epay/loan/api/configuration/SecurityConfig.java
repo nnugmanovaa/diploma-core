@@ -40,6 +40,8 @@ class SecurityConfig extends BaseSecurityConfiguration {
           .antMatcher("/system/**")
           .authorizeRequests()
           .antMatchers(HttpMethod.GET, "/actuator/**").permitAll()
+          .antMatchers(HttpMethod.POST, "/auth/**").permitAll()
+          .antMatchers(HttpMethod.POST, "/clients/create").permitAll()
           .antMatchers(HttpMethod.GET, "/stop-factor-check/raw/**").permitAll()
           .antMatchers(HttpMethod.GET, "/pkb/**").permitAll()
           .antMatchers(
@@ -80,6 +82,8 @@ class SecurityConfig extends BaseSecurityConfiguration {
       http.csrf().disable().cors(Customizer.withDefaults())
           .authorizeRequests()
           .antMatchers(HttpMethod.GET, permittedUrls).permitAll()
+          .antMatchers(HttpMethod.POST, "/auth/**").permitAll()
+          .antMatchers(HttpMethod.POST, "/clients/create").permitAll()
           .antMatchers(HttpMethod.GET, "/pkb/**").permitAll()
           .antMatchers(HttpMethod.POST, "/halyk/callback").permitAll()
           .antMatchers(HttpMethod.POST, "/acquiring/callback").permitAll()

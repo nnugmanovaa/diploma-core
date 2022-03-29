@@ -7,16 +7,11 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(
-    value = "app.sms-sender.dummy",
-    havingValue = "true",
-    matchIfMissing = false)
 public class DummySmsSender implements SmsSender {
 
   @Value("${app.sms-sender.msg-tail}")
   private String msgTail;
 
-  @Value("${app.sms-sender.msg-tail-debug}")
   private String msgTailDebug;
 
   @Override

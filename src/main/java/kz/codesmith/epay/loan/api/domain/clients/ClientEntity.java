@@ -26,7 +26,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
 @Entity
-@Table(name = "clients")
+@Table(name = "main.clients")
 @Getter
 @Setter
 @AllArgsConstructor
