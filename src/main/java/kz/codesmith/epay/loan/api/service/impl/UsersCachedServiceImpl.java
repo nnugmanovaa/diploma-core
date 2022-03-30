@@ -339,8 +339,8 @@ public class UsersCachedServiceImpl implements IUsersCachedService {
     userEntity.setStatus(user.getStatus());
     userEntity.setPassword(passwordEncoder.encode(user.getPassword()));
     userEntity.setUpdatedBy(userContext.getUsername());
-    userEntity.setInsertedBy(userContext.getUsername());
-    userEntity.setUpdatedBy(userContext.getUsername());
+    userEntity.setInsertedBy("root");
+    userEntity.setUpdatedBy("root");
 
     userEntity = usersRepository.save(userEntity);
 

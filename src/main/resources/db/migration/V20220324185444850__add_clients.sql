@@ -16,36 +16,7 @@ CREATE TABLE main.clients
     updated_by     VARCHAR(50)                                                          NULL,
     inserted_time  TIMESTAMP(3)                                                         NOT NULL,
     updated_time   TIMESTAMP(3)                                                         NOT NULL
-)
-
-CREATE SEQUENCE users_user_id_seq INCREMENT BY 1 START WITH 100;
-COMMENT ON SEQUENCE users_user_id_seq IS 'Users Sequence.';
-
-CREATE TABLE main.users
-(
-    user_id       INTEGER     DEFAULT nextval('users_user_id_seq'::regclass) NOT NULL,
-    username      VARCHAR(250)                                                    NOT NULL,
-    password      TEXT                                                            NOT NULL,
-    inserted_time TIMESTAMP(3)                                                    NOT NULL,
-    updated_time  TIMESTAMP(3),
-    operators_id  INTEGER                                                         NULL,
-    owner_id      INTEGER                                                         NULL,
-    owner_type    VARCHAR(20)                                                     NULL CHECK (owner_type in
-        ('OPERATOR',
-        'AGENT',
-        'MERCHANT',
-        'BANK',
-        'CLIENT',
-        'SALES_POINT')),
-    updated_by    VARCHAR(50)                                                     NULL,
-    inserted_by   VARCHAR(50)                                                     NOT NULL,
-    status        VARCHAR(10) DEFAULT 'ACTIVE'                                    NOT NULL CHECK (status in ('ACTIVE', 'INACTIVE', 'DELETED'))
-)
-
-ALTER TABLE loan.users
-    ADD COLUMN IF NOT EXISTS firstname      VARCHAR(100)             NULL,
-    ADD COLUMN IF NOT EXISTS lastname       VARCHAR(100)             NULL,
-    ADD COLUMN IF NOT EXISTS email          VARCHAR(100)             NULL;
+);
 
 CREATE TABLE main.user_roles
 (
@@ -55,3 +26,21 @@ CREATE TABLE main.user_roles
 
 INSERT INTO main.user_roles(user_id, role)
 VALUES (1, 'ROOT');
+
+ALTER TABLE main.clients
+    ADD COLUMN IF NOT EXISTS identification_status VARCHAR(20) DEFAULT 'UNIDENTIFIED' NOT NULL CHECK (identification_status IN ('UNIDENTIFIED','IDENTIFIED'));
+
+ALTER TABLE main.clients
+    ADD COLUMN IF NOT EXISTS mname varchar(100) NULL;
+
+
+alter table main.clients
+    add column IF NOT EXISTS lname VARCHAR(100) NULL,
+    add column IF NOT EXISTS iin VARCHAR(12)  NULL,
+    add column IF NOT EXISTS birth_date DATE NULL;
+
+ALTER TABLE main.clients
+    ADD COLUMN IF NOT EXISTS avatar_url varchar(250) NULL;
+
+ALTER TABLE main.clients
+    ADD COLUMN IF NOT EXISTS notification_token VARCHAR(250) NULL;
