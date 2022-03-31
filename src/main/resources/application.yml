@@ -64,83 +64,15 @@ logging:
     com.openhtmltopdf: ERROR
 
 integration:
-  pkb:
-    url: ${INTEGRATION_PKB_URL:http://www-test2.1cb.kz}
-    username: ${INTEGRATION_PKB_USERNAME:7018884245}
-    password: ${INTEGRATION_PKB_PASSWORD:911031300745}
-    check-result-actual-days: ${INTEGRATION_PKB_CHECK_RESULT_ACTUAL_DAYS:7}
-    cacheDurationTtl: ${INTEGRATION_PKB_CACHE_DURATION_TTL:PT10M}
-    service-timeout: ${INTEGRATION_PKB_SERVICE_TIMEOUT:190000}
   pkb-connector:
     url: ${INTEGRATION_PKB_CONNECTOR_URL:http://localhost:8080/api}
     username: ${INTEGRATION_PKB_CONNECTOR_USERNAME:}
     password: ${INTEGRATION_PKB_CONNECTOR_PASSWORD:}
-  mfo.core:
-    url: ${INTEGRATION_MFO_CORE_URL:http://mfo.payintech.kz/DEMO_MFO_pintech/ws}
-    username: ${INTEGRATION_MFO_CORE_USERNAME:ws}
-    password: ${INTEGRATION_MFO_CORE_PASSWORD:1$finwTb^51vA}
-    service-timeout: ${INTEGRATION_MFO_CORE_SERVICE_TIMEOUT:90000}
-  mfs.core:
-    url: ${INTEGRATION_MFS_CORE_URL:https://api-stage.pitech.kz/api}
-    username: ${INTEGRATION_MFS_CORE_USERNAME:operator_1000_user}
-    password: ${INTEGRATION_MFS_CORE_PASSWORD:q}
-    agentTopUsername: ${INTEGRATION_MFS_CORE_AGEMT_TOP_USERNAME:agent_1000_user}
-    agentTopPassword: ${INTEGRATION_MFS_CORE_AGENT_TOP_PASSWORD:q}
-    service-timeout: ${INTEGRATION_MFS_CORE_SERVICE_TIMEOUT:240000}
-    signin-url: ${INTEGRATION_MFS_CORE_SIGNIN_URL:/auth/signin}
-    get-user-url: ${INTEGRATION_MFS_CORE_GET_USER_URL:/admin/users}
-    get-client-url: ${INTEGRATION_MFS_CORE_GET_CLIENT_URL:/admin/clients/by-clientname}
-    get-payment-url: ${INTEGRATION_MFS_CORE_AGENT_PAYMENT_URL:/agent/payments}
-    clientsProfileUrl: ${INTEGRATION_MFS_CORE_CLIENTS_PROFILE_URL:/clients/profile}
-    agent-name: ${INTEGRATION_MFS_CORE_AGENT_USERNAME:agent_1000_user}
-    agent-password: ${INTEGRATION_MFS_CORE_AGENT_PASSWORD:q}
-    init-top-up-url: ${INTEGRATION_MFS_CORE_TOP_UP_URL:/agent/wallets/topup/direct}
-    return-payment-url: ${INTEGRATION_MFS_CORE_REVERSE_PAYMENT_URL:/agent/payments/init/buy/reverse}
-    regular-service-id: ${INTEGRATION_MFS_CORE_REGULAR_SERVICE_ID:1000}
-    early-partial-service-id: ${INTEGRATION_MFS_CORE_EARLY_PARTIAL_SERVICE_ID:1001}
-    early-full-service-id: ${INTEGRATION_MFS_CORE_EARLY_FULL_SERVICE_ID:1002}
-  halyk:
-    password: '${INTEGRATION_HALYK_CERT_PASSWORD:nissan}'
-    certificate: '${INTEGRATION_HALYK_CERTIFICATE:classpath:halyk/certificate.jks}'
-    signCertificateAlias: '${INTEGRATION_HALYK_SIGN_CERT_ALIAS:cert}'
-    verifyCertificateAlias: '${INTEGRATION_HALYK_VERIFY_CERT_ALIAS:kkbca}'
-    certificateId: '${INTEGRATION_HALYK_CERT_ID:00C182B189}'
-    merchantId: '${INTEGRATION_HALYK_MERCHANT_ID:92061101}'
-    merchantMainTerminalId: '${INTEGRATION_HALYK_MAIN_TERMINAL_ID:92061101}'
-    merchantName: '${INTEGRATION_HALYK_MERCHANT_NAME:Payintech MFO}'
-    cardIdFrom: '${INTEGRATION_HALYK_CARD_ID_FROM:900000014170}'
-    cardTransferSubmitUrl: '${INTEGRATION_HALYK_CARD_TRANSFER_SUBMIT_URL:https://testpay.kkb.kz/jsp/p2pregtonoreg/logon.jsp}'
-    postLink: '${INTEGRATION_HALYK_POST_LINK:http://localhost:8083/api/halyk/callback}'
-    cardTransferTemplate: '${INTEGRATION_HALYK_CARD_TRANSFER_TEMPLATE:default_transfer.xsl}'
-  acquiring:
-    url: ${INTEGRATION_ACQUIRING_URL:https://cards-stage.pitech.kz}
-    username: ${INTEGRATION_ACQUIRING_USERNAME:s8_TgRyMm2Ik_tGlJ8MKD2UvKEAENvhL}
-    password: ${INTEGRATION_ACQUIRING_PASSWORD:k-59eRv9sKHsbUyfr98r09XNichjsJHq}
-    connectTimeout: ${INTEGRATION_ACQUIRING_CONNECT_TIMEOUT:30000}
-    readTimeout: ${INTEGRATION_ACQUIRING_READ_TIMEOUT:45000}
-    paymentUrl: ${INTEGRATION_ACQUIRING_PAYMENT_URL:http://cards-stage.pitech.kz/gw/payments/cards/charge}
-    successReturnUrl: ${INTEGRATION_ACQUIRING_SUCCESS_RETURN_URL:https://money-stage.pitech.kz}
-    errorReturnUrl: ${INTEGRATION_ACQUIRING_ERROR_RETURN_URL:https://money-stage.pitech.kz}
-    callbackSuccessUrl: ${ACQUIRING_SUCCESS_CALLBACK_URL:https://loan-stage.pitech.kz/api/acquiring/callback}
-    callbackErrorUrl: ${ACQUIRING_ERROR_CALLBACK_URL:https://loan-stage.pitech.kz/api/acquiring/callback}
-  mfo-app:
-    url: ${MFO_PITECH_GW_URL:http://mfo.payintech.kz/DEMO_MFO_pintech/ws/PaymentServices.1cws}
-    username: ${INTEGRATION_ONEC_USERNAME:ws_pitech}
-    password: ${INTEGRATION_ONEC_PASSWORD:d12E@!Jc1p!@f}
-    serviceName: ${INTEGRATION_ONEC_SERVICE_NAME:pitech-ewallet}
-    readTimeout: 45000
   telegram:
     url: ${TELEGRAM_GW_URL:http://localhost:8087/api}
     username: ${TELEGRAM_GW_USER:test}
     password: ${TELEGRAM_GW_PASS:test}
     service-timeout: ${TELEGRAM_GW_TIMEOUT:30000}
-  payout:
-    cardIdFrom: ${PAYOUT_CARD_FROM:card_O61RuvQzRcrzP0eGliDBS5-u4hABCLFp}
-    enabled: ${PAYOUT_ENABLED:true}
-    username: ${PAYOUT_USERNAME:admin}
-    password: ${PAYOUT_PASSWORD:$2a$12$.ZDWXoeurdLU2.bJ/e74Feps0zj4xrUfA1NHLfyaMGHhYsHzmJjfK}
-    callbackSuccessUrl: ${PAYOUT_SUCCESS_CALLBACK_URL:https://loan-stage.pitech.kz/api/payout/callback}
-    callbackErrorUrl: ${PAYOUT_ERROR_CALLBACK_URL:https://loan-stage.pitech.kz/api/payout/callback}
 
 jwt:
   secret: '${JWT_SECRET:A?D(G+KaPdSgVkYp3s6v9y$B&E)H@McQeThWmZq4t7w!z%C*F-JaNdRgUjXn2r5u}'
@@ -150,20 +82,12 @@ scoring:
   useOwnScore: ${OWN_SCORE:true}
   enabled: ${SCORING_ENABLED:true}
   max-kdn: ${MAX_KDN:0.5}
-  iin.whitelist: '${SCORING_IIN_WHITELIST:870807302559,930521300869,880818401261,880203300065,861015300309,870807302559}'
-  iin.backlist: '${SCORING_IIN_BLACKLIST:011124600444,910111300241}'
   score-for-blacklist: ${SCORE_FOR_BLACK_LIST:620}
   badrate-for-blacklist: ${BADRATE_FOR_BLACK_LIST:14}
   max-decil: ${MAX_DECIL:10}
   interestRate: ${LOAN_INTERESTRATE:56}
-  ownScoreUrl: '${OWN_SCORE_URL:http://mfo-scoring.pitech.ext:5000/scoring}'
   checkOpenLoans: ${CHECK_OPEN_LOANS:true}
   pdlMaxInterestRate: ${PDL_MAX_INTERESTRATE:24.5}
-s3-storage:
-  endpoint-url: '${S3_ENDPOINT_URL:https://object.pscloud.io}'
-  access-key: '${S3_ACCESS_KEY:MTTZXDH2CQVD07UHABOE}'
-  secret-key: '${S3_SECRET_KEY:9r7D1pDSY9VcUr6zOoBqRfy9VMkIKIk5ekvHU65f}'
-  bucket-name: '${S3_BUCKET:mfo-docs-stage}'
 
 retrytemplate:
   maxAttempts: ${RETRYTEMPLATE_MAX_ATTEMPTS:3}
@@ -173,15 +97,6 @@ payment-services:
   plannedRePaymentProductId: ${PLANNED_REPAYMENT_PRODUCT_ID:1}
   partialRePaymentProductId: ${PARTIAL_REPAYMENT_PRODUCT_ID:2}
   totalRePaymentProductId: ${TOTAL_REPAYMENT_PRODUCT_ID:3}
-
-app:
-  sms-sender:
-    url: ${SMS_SENDER_URL:https://api.smstraffic.ru/multi.php}
-    username: ${SMS_SENDER_USER:pitech}
-    password: ${SMS_SENDER_PASS:pe9E_3Na}
-    sender: ${SMS_SENDER_ORIGIN:Payintech}
-    msg-tail: ${SMS_SENDER_MSG_TAIL:38uo9CDCtK3}
-    dummy: ${SMS_SENDER_DUMMY:false}
   phone-verification:
     dummy-code: ${VERIFICATION_DUMMY:false}
     dummy-code-value: ${VERIFICATION_DUMMY_CODE:000000}
