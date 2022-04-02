@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class DummySmsSender implements SmsSender {
 
-  @Value("${app.sms-sender.msg-tail}")
   private String msgTail;
 
   private String msgTailDebug;

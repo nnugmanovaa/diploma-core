@@ -88,6 +88,8 @@ scoring:
   interestRate: ${LOAN_INTERESTRATE:56}
   checkOpenLoans: ${CHECK_OPEN_LOANS:true}
   pdlMaxInterestRate: ${PDL_MAX_INTERESTRATE:24.5}
+  maxScoringResult: ${MAX_SCORE:137160}
+
 
 retrytemplate:
   maxAttempts: ${RETRYTEMPLATE_MAX_ATTEMPTS:3}

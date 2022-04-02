@@ -97,6 +97,7 @@ public class PkbConnectorServiceImpl implements IPkbConnectorService {
         .getContracts();
     return ScoringModel.builder()
         .iin(iin)
+        .kdn(kdnReport.getKdnScore())
         .debt(kdnReport.getDebt())
         .income(kdnReport.getIncome())
         .numberOfActiveLoans(contracts != null ? contracts.size() : 0)

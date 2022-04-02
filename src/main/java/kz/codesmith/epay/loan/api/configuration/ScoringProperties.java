@@ -17,4 +17,5 @@ public class ScoringProperties {
   private String ownScoreUrl;
   private boolean checkOpenLoans;
   private float pdlMaxInterestRate;
+  private double maxScoringResult;
 }

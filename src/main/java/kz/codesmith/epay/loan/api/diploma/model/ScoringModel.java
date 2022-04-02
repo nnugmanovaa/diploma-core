@@ -22,4 +22,5 @@ public class ScoringModel {
   private Integer period;
   private Integer numberOfKids;
   private Integer clientAge;
+  private Double kdn;
 }
