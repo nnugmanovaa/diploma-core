@@ -5,6 +5,7 @@ import kz.codesmith.epay.loan.api.model.JobDetailsDto;
 import kz.codesmith.epay.loan.api.model.PassportInfoDto;
 import kz.codesmith.epay.loan.api.model.PersonalFullDataDto;
 import kz.codesmith.epay.loan.api.service.IPersonalInfoService;
+import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,39 +21,40 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/clients")
 @Logged
-@PreAuthorize("hasAuthority('ADMIN')")
+@PreAuthorize("hasAuthority('CLIENT_USER')")
 @RequiredArgsConstructor
 public class PersonalInfoController {
   private final IPersonalInfoService personalInfoService;
+  private final UserContextHolder userContextHolder;
 
-  @PostMapping(path = "/address-info/{clientsId}")
-  public ResponseEntity<AddressInfoDto> saveAddressInfo(@RequestBody AddressInfoDto
-      addressInfoDto, @PathVariable Integer clientsId) {
+  @PostMapping(path = "/address-info")
+  public ResponseEntity<AddressInfoDto> saveAddressInfo(@RequestBody AddressInfoDto addressInfoDto) {
+    Integer clientsId = userContextHolder.getContext().getOwnerId();
     return ResponseEntity.ok(personalInfoService.saveAddressInfo(addressInfoDto, clientsId));
   }
 
-  @PostMapping(path = "/job-details/{clientsId}")
-  public ResponseEntity<JobDetailsDto> saveJobDetails(@RequestBody JobDetailsDto
-      jobDetailsDto, @PathVariable Integer clientsId) {
+  @PostMapping(path = "/job-details")
+  public ResponseEntity<JobDetailsDto> saveJobDetails(@RequestBody JobDetailsDto jobDetailsDto) {
+    Integer clientsId = userContextHolder.getContext().getOwnerId();
     return ResponseEntity.ok(personalInfoService.saveJobDetails(jobDetailsDto, clientsId));
   }
 
-  @PostMapping(path = "/passport-info/{clientsId}")
-  public ResponseEntity<PassportInfoDto> savePassportInfo(@RequestBody PassportInfoDto
-      passportInfoDto, @PathVariable Integer clientsId) {
+  @PostMapping(path = "/passport-info")
+  public ResponseEntity<PassportInfoDto> savePassportInfo(@RequestBody PassportInfoDto passportInfoDto) {
+    Integer clientsId = userContextHolder.getContext().getOwnerId();
     return ResponseEntity.ok(personalInfoService.savePassportInfo(passportInfoDto, clientsId));
   }
 
-  @GetMapping(path = "/full-personal-info/{clientsId}")
-  public ResponseEntity<PersonalFullDataDto> getPersonalFullDataByClientsId(
-      @PathVariable Integer clientsId) {
+  @GetMapping(path = "/full-personal-info")
+  public ResponseEntity<PersonalFullDataDto> getPersonalFullDataByClientsId() {
+    Integer clientsId = userContextHolder.getContext().getOwnerId();
     return ResponseEntity.ok(personalInfoService.getPersonalFullDataByClientsId(clientsId));
   }
 
-  @PutMapping(path = "/update-personal-info/{clientsId}")
+  @PutMapping(path = "/update-personal-info")
   public ResponseEntity<PersonalFullDataDto> updatePersonalFullData(
-      @RequestBody PersonalFullDataDto personalFullDataDto,
-      @PathVariable Integer clientsId) {
+      @RequestBody PersonalFullDataDto personalFullDataDto) {
+    Integer clientsId = userContextHolder.getContext().getOwnerId();
     return ResponseEntity.ok(personalInfoService.updatePersonalFullData(personalFullDataDto,
         clientsId));
   }

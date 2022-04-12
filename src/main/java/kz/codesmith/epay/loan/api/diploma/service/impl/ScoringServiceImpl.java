@@ -1,7 +1,10 @@
 package kz.codesmith.epay.loan.api.diploma.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import kz.codesmith.epay.loan.api.configuration.ScoringProperties;
 import kz.codesmith.epay.loan.api.diploma.model.ScoringModel;
 import kz.codesmith.epay.loan.api.diploma.model.ScoringRequest;
@@ -10,7 +13,10 @@ import kz.codesmith.epay.loan.api.diploma.service.IPkbConnectorService;
 import kz.codesmith.epay.loan.api.diploma.service.IScoringService;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
+import kz.codesmith.epay.loan.api.repository.ScoringVarsRepository;
+import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
+import kz.codesmith.epay.loan.api.service.VariablesHolder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +26,23 @@ public class ScoringServiceImpl implements IScoringService {
   private final IPkbConnectorService pkbConnectorService;
   private final IScoreVariablesService scoreVariablesService;
   private final ScoringProperties scoringProperties;
+  private final ScoringContext scoringContext;
+  private final ScoringVarsRepository repository;
+  private final ObjectMapper objectMapper;
 
   @Override
   public ScoringResponse score(ScoringRequest request) {
     ScoringModel scoringModel = pkbConnectorService.getScoringModelByIin(request.getIin());
     scoringModel.setLoanAmount(BigDecimal.valueOf(request.getLoanAmount()));
     scoringModel.setPeriod(request.getLoanPeriod());
+    scoringModel.setNumberOfKids(request.getPersonalInfo().getNumberOfKids());
+
+    scoringContext.setVariablesHolder(
+        new VariablesHolder(
+            getScoringVarsMap(),
+            objectMapper
+        )
+    );
 
     if (scoringModel.getKdn() > scoringProperties.getMaxKdn()) {
       return ScoringResponse.builder()
@@ -76,5 +93,12 @@ public class ScoringServiceImpl implements IScoringService {
         .scoringInfo(scoringModel)
         .orderTime(LocalDateTime.now())
         .build();
+  }
+
+  public Map<String, String> getScoringVarsMap() {
+    Map<String, String> scoringVars = new HashMap<>();
+    repository.findAll()
+        .forEach(r -> scoringVars.put(r.getConstantName(), r.getValue()));
+    return scoringVars;
   }
 }
