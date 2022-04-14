@@ -10,6 +10,8 @@ import kz.codesmith.epay.core.shared.model.users.UserCreateDto;
 import kz.codesmith.epay.core.shared.model.users.UserDto;
 import kz.codesmith.epay.core.shared.model.users.UserRole;
 import kz.codesmith.epay.core.shared.model.users.UserUpdateDto;
+import kz.codesmith.epay.loan.api.diploma.model.SimpleClientPasswordChangeDto;
+import kz.codesmith.epay.loan.api.diploma.model.UserPasswordChangeDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -72,4 +74,8 @@ public interface IUsersCachedService {
   String generateRandomPassword();
 
   void updateUsername(String oldName, String newName);
+
+  UserDto resetUserPassword(UserPasswordChangeDto passwordChangeDto);
+
+  UserDto resetClientPassword(SimpleClientPasswordChangeDto passwordChangeDto);
 }

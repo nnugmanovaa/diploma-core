@@ -20,6 +20,8 @@ import kz.codesmith.epay.core.shared.model.users.UserCreateDto;
 import kz.codesmith.epay.core.shared.model.users.UserDto;
 import kz.codesmith.epay.core.shared.model.users.UserRole;
 import kz.codesmith.epay.core.shared.model.users.UserUpdateDto;
+import kz.codesmith.epay.loan.api.diploma.model.SimpleClientPasswordChangeDto;
+import kz.codesmith.epay.loan.api.diploma.model.UserPasswordChangeDto;
 import kz.codesmith.epay.loan.api.service.IUsersCachedService;
 import kz.codesmith.epay.loan.api.util.UsersMapper;
 import kz.codesmith.epay.security.domain.UserEntity;
@@ -318,14 +320,16 @@ public class UsersCachedServiceImpl implements IUsersCachedService {
 
 
   private void createUserRoles(Long userId, List<UserRole> roles) {
-    roles.forEach(a -> {
-      UserRolesEntity userRolesEntity = new UserRolesEntity();
-      UserRolesIdentity userRolesIdentity = new UserRolesIdentity();
-      userRolesIdentity.setRole(a.name());
-      userRolesIdentity.setUserId(userId);
-      userRolesEntity.setUserRolesIdentity(userRolesIdentity);
-      usersRolesRepository.save(userRolesEntity);
-    });
+    if (Objects.nonNull(roles)) {
+      roles.forEach(a -> {
+        UserRolesEntity userRolesEntity = new UserRolesEntity();
+        UserRolesIdentity userRolesIdentity = new UserRolesIdentity();
+        userRolesIdentity.setRole(a.name());
+        userRolesIdentity.setUserId(userId);
+        userRolesEntity.setUserRolesIdentity(userRolesIdentity);
+        usersRolesRepository.save(userRolesEntity);
+      });
+    }
   }
 
   private UserDto createUserUnchecked(@Valid UserCreateDto user) {
@@ -368,5 +372,76 @@ public class UsersCachedServiceImpl implements IUsersCachedService {
   public void updateUsername(String oldName, String newName) {
     usersRepository.updateUsername(oldName, newName);
     springCacheBasedUserCache.removeUserFromCache(oldName);
+  }
+
+  @Override
+  @CacheEvict(value = "users", key = "#result?.username")
+  @Transactional
+  public UserDto resetUserPassword(UserPasswordChangeDto passwordChangeDto) {
+
+    var context = userContext.getContext();
+    Integer ownerId = context.getOwnerId();
+
+    Optional<UserEntity> userEntity = usersRepository
+        .findByUsername(passwordChangeDto.getUsername());
+
+    if (!userEntity.isPresent()) {
+      throw new NotFoundApiServerException(
+          ApiErrorTypeParamValues.USER_OWNER, context.getOwnerId()
+      );
+    }
+
+    UserEntity entity = userEntity.get();
+
+    checkNewPassword(passwordChangeDto.getOldPassword(),
+        passwordChangeDto.getNewPassword(),
+        entity.getPassword());
+
+    entity.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
+    usersRepository.save(entity);
+
+    springCacheBasedUserCache.removeUserFromCache(entity.getUsername());
+
+    return usersMapper.toDto(entity);
+  }
+
+  @Override
+  @CacheEvict(value = "users", key = "#result?.username")
+  @Transactional
+  public UserDto resetClientPassword(SimpleClientPasswordChangeDto passwordChangeDto) {
+    var context = userContext.getContext();
+    Integer ownerId = context.getOwnerId();
+
+    Optional<UserEntity> userEntity = usersRepository
+        .findByUsername(passwordChangeDto.getUsername());
+
+    if (!userEntity.isPresent()) {
+      throw new NotFoundApiServerException(
+          ApiErrorTypeParamValues.USER_OWNER, context.getOwnerId()
+      );
+    }
+
+    UserEntity entity = userEntity.get();
+
+    checkNewPassword(passwordChangeDto.getOldPassword(),
+        passwordChangeDto.getNewPassword(),
+        entity.getPassword());
+
+    entity.setPassword(passwordEncoder.encode(passwordChangeDto.getNewPassword()));
+    usersRepository.save(entity);
+
+    springCacheBasedUserCache.removeUserFromCache(entity.getUsername());
+
+    return usersMapper.toDto(entity);
+  }
+
+  private void checkNewPassword(String oldPassword, String newPassword, String activePassword) {
+    if (!passwordEncoder.matches(oldPassword, activePassword)) {
+      throw new GeneralApiServerException(ApiErrorType.E500_USER_PASSWORD_INCORRECT);
+    }
+
+    if (passwordEncoder.matches(newPassword, activePassword)) {
+      throw new GeneralApiServerException(ApiErrorType.E500_USER_NEW_PASSWORD_THE_SAME_WITH_OLD);
+    }
   }
 }

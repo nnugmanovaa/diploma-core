@@ -11,12 +11,19 @@ import kz.codesmith.epay.loan.api.diploma.model.ScoringRequest;
 import kz.codesmith.epay.loan.api.diploma.model.ScoringResponse;
 import kz.codesmith.epay.loan.api.diploma.service.IPkbConnectorService;
 import kz.codesmith.epay.loan.api.diploma.service.IScoringService;
+import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
+import kz.codesmith.epay.loan.api.model.orders.OrderState;
+import kz.codesmith.epay.loan.api.model.orders.OrderType;
+import kz.codesmith.epay.loan.api.model.scoring.PersonalInfoDto;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringResult;
 import kz.codesmith.epay.loan.api.model.scoring.ScoringVars;
+import kz.codesmith.epay.loan.api.repository.LoanOrdersRepository;
 import kz.codesmith.epay.loan.api.repository.ScoringVarsRepository;
 import kz.codesmith.epay.loan.api.requirement.ScoringContext;
 import kz.codesmith.epay.loan.api.service.IScoreVariablesService;
 import kz.codesmith.epay.loan.api.service.VariablesHolder;
+import kz.codesmith.epay.security.model.UserContextHolder;
+import kz.payintech.ListLoanMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +36,24 @@ public class ScoringServiceImpl implements IScoringService {
   private final ScoringContext scoringContext;
   private final ScoringVarsRepository repository;
   private final ObjectMapper objectMapper;
+  private final UserContextHolder contextHolder;
+  private final LoanOrdersRepository ordersRepository;
 
   @Override
   public ScoringResponse score(ScoringRequest request) {
+    OrderEntity orderEntity = new OrderEntity();
+    orderEntity.setStatus(OrderState.NEW);
+    orderEntity.setLoanProduct("1-0000007");
+    orderEntity.setMsisdn(contextHolder.getContext().getUsername());
+    orderEntity.setIin(request.getIin());
+    orderEntity.setLoanAmount(BigDecimal.valueOf(request.getLoanAmount()));
+    orderEntity.setLoanMethod(ListLoanMethod.ANNUITY_PAYMENTS.value());
+    orderEntity.setClientId(contextHolder.getContext().getOwnerId());
+    orderEntity.setClientInfo(getClientFullName(request.getPersonalInfo()));
+    orderEntity.setLoanPeriodMonths(request.getLoanPeriod());
+    orderEntity.setOrderType(OrderType.PRIMARY);
+    orderEntity = ordersRepository.save(orderEntity);
+
     ScoringModel scoringModel = pkbConnectorService.getScoringModelByIin(request.getIin());
     scoringModel.setLoanAmount(BigDecimal.valueOf(request.getLoanAmount()));
     scoringModel.setPeriod(request.getLoanPeriod());
@@ -82,12 +104,16 @@ public class ScoringServiceImpl implements IScoringService {
         + numberOfKids * scoringModel.getNumberOfKids();
 
     if (score > scoringProperties.getMaxScoringResult()) {
+      orderEntity.setStatus(OrderState.REJECTED);
+      ordersRepository.save(orderEntity);
       return ScoringResponse.builder()
           .result(ScoringResult.REFUSED)
           .scoringInfo(scoringModel)
           .orderTime(LocalDateTime.now())
           .build();
     }
+    orderEntity.setStatus(OrderState.APPROVED);
+    ordersRepository.save(orderEntity);
     return ScoringResponse.builder()
         .result(ScoringResult.APPROVED)
         .scoringInfo(scoringModel)
@@ -100,5 +126,9 @@ public class ScoringServiceImpl implements IScoringService {
     repository.findAll()
         .forEach(r -> scoringVars.put(r.getConstantName(), r.getValue()));
     return scoringVars;
+  }
+
+  private String getClientFullName(PersonalInfoDto dto) {
+    return String.format("%s %s", dto.getLastName(), dto.getFirstName());
   }
 }

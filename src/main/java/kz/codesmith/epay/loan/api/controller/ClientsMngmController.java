@@ -3,7 +3,11 @@ package kz.codesmith.epay.loan.api.controller;
 import io.swagger.annotations.ApiOperation;
 import javax.validation.Valid;
 import kz.codesmith.epay.core.shared.model.clients.ClientCreateDto;
+import kz.codesmith.epay.loan.api.diploma.model.SimpleClientPasswordChangeDto;
+import kz.codesmith.epay.loan.api.diploma.model.UserPasswordChangeDto;
 import kz.codesmith.epay.loan.api.service.IClientsServices;
+import kz.codesmith.epay.loan.api.service.IUsersCachedService;
+import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -20,6 +24,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ClientsMngmController {
   private final IClientsServices clientsServices;
+  private final UserContextHolder userContextHolder;
+  private final IUsersCachedService userService;
 
   @ApiOperation(
       value = "Creates Client.", notes = "In future only shortname & password will be required",
@@ -32,4 +38,18 @@ public class ClientsMngmController {
     clientsServices.createNewClientWithAccountStructure(initDto, false);
     return ResponseEntity.ok().build();
   }
+
+  @PreAuthorize("hasAuthority('CLIENT_USER')")
+  @ApiOperation(
+      value = "Смена пароля у пользователя.",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @PostMapping("/change-password")
+  public ResponseEntity<Void> resetPassword(
+      @RequestBody @Valid UserPasswordChangeDto passwordChangeDto
+  ) {
+    userService.resetUserPassword(passwordChangeDto);
+    return ResponseEntity.ok().build();
+  }
+
 }

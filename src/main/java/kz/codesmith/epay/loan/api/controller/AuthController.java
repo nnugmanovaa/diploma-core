@@ -1,5 +1,6 @@
 package kz.codesmith.epay.loan.api.controller;
 
+import io.swagger.annotations.ApiOperation;
 import java.util.Optional;
 import javax.validation.Valid;
 import kz.codesmith.epay.core.shared.model.OwnerType;
@@ -9,6 +10,8 @@ import kz.codesmith.epay.core.shared.model.exceptions.ClientNotValidatedApiServe
 import kz.codesmith.epay.core.shared.model.exceptions.GeneralApiServerException;
 import kz.codesmith.epay.core.shared.model.exceptions.accounts.UserIsBlockedApiServerException;
 import kz.codesmith.epay.core.shared.model.users.UserDto;
+import kz.codesmith.epay.loan.api.diploma.model.SimpleClientPasswordChangeDto;
+import kz.codesmith.epay.loan.api.diploma.model.SimplePasswordChangeDto;
 import kz.codesmith.epay.loan.api.model.security.JwtResponse;
 import kz.codesmith.epay.loan.api.model.security.LoginRequest;
 import kz.codesmith.epay.loan.api.service.IClientsServices;
@@ -17,6 +20,7 @@ import kz.codesmith.epay.security.component.JwtTokenUtil;
 import kz.codesmith.epay.security.component.ListenedDaoAuthenticationProvider;
 import kz.codesmith.epay.security.model.EpayCoreUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -75,5 +79,23 @@ public class AuthController {
     }
 
     return ResponseEntity.ok(response);
+  }
+
+  @ApiOperation(
+      value = "Смена пароля у клиента.",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @PostMapping("/password-reset")
+  public ResponseEntity<?> resetClientPassword(
+      @RequestBody @Valid SimplePasswordChangeDto dto
+  ) {
+    clientsServices.saveNewPassword(
+        dto.getClientName(),
+        dto.getPassword(),
+        1000,
+        false,
+        true
+    );
+    return authenticateUser(new LoginRequest(dto.getClientName(), dto.getPassword()));
   }
 }
