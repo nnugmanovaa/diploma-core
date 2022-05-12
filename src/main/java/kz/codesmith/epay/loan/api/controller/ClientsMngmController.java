@@ -6,14 +6,18 @@ import kz.codesmith.epay.core.shared.model.clients.ClientCreateDto;
 import kz.codesmith.epay.core.shared.model.clients.ClientDto;
 import kz.codesmith.epay.loan.api.diploma.model.SimpleClientPasswordChangeDto;
 import kz.codesmith.epay.loan.api.diploma.model.UserPasswordChangeDto;
+import kz.codesmith.epay.loan.api.model.NewLoanRequest;
+import kz.codesmith.epay.loan.api.model.NewLoanResp;
 import kz.codesmith.epay.loan.api.service.IClientsServices;
 import kz.codesmith.epay.loan.api.service.IUsersCachedService;
 import kz.codesmith.epay.security.model.UserContextHolder;
 import kz.codesmith.logger.Logged;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -63,5 +67,15 @@ public class ClientsMngmController {
       @PathVariable("clientName") String clientName
   ) {
     return ResponseEntity.ok(clientsServices.getClientByClientName(clientName).get());
+  }
+
+  @PostMapping("/requestId")
+  @ApiOperation("Register new request")
+  public ResponseEntity<NewLoanResp> registerNewRequest(
+      Authentication auth,
+      @Valid @RequestBody NewLoanRequest newLoanRequest
+  ) {
+    String requestId = String.valueOf(RandomUtils.nextLong());
+    return ResponseEntity.ok().body(new NewLoanResp(requestId));
   }
 }

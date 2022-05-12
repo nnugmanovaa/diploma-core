@@ -28,11 +28,6 @@ import org.springframework.http.MediaType;
 @Configuration
 public class AmqpConfig {
 
-  public static final String PAYMENT_SEND_ROUTING_KEY = "payment.loan-payments";
-  public static final String PAYMENT_EXCHANGE_NAME = "loan-payments-exchange";
-  public static final String PAYMENT_QUEUE_NAME = "queue-loan-payments";
-  public static final String PAYMENT_ROUTING_KEY_TEMPLATE = "#.loan-payments";
-
   public static final String LOAN_STATUSES_ROUTING_KEY = "loan.loan-status";
   public static final String LOAN_STATUSES_IIN_ROUTING_KEY = "loan.loan-status-by-iin";
   public static final String LOAN_STATUSES_EXCHANGE_NAME = "loan-status-exchange";
@@ -41,15 +36,6 @@ public class AmqpConfig {
   public static final String LOAN_STATUSES_ROUTING_KEY_TEMPLATE = "#.loan-status";
   public static final String LOAN_STATUSES_IIN_ROUTING_KEY_TEMPLATE = "#.loan-status-by-iin";
 
-  public static final String LOAN_PAYMENT_ROUTING_KEY = "loan.loan-payment";
-  public static final String LOAN_PAYMENT_EXCHANGE_NAME = "loan-payment-exchange";
-  public static final String LOAN_PAYMENT_QUEUE_NAME = "queue-loan-payment";
-  public static final String LOAN_PAYMENT_ROUTING_KEY_TEMPLATE = "#.loan-payment";
-
-  public static final String CASHOUT_ROUTING_KEY = "client.cashout-payment";
-  public static final String CASHOUT_PAYMENT_EXCHANGE_NAME = "cashout-payment-exchange";
-  public static final String CASHOUT_PAYMENT_QUEUE_NAME = "queue-cashout-payment";
-  public static final String CASHOUT_PAYMENT_ROUTING_KEY_TEMPLATE = "#.cashout-payment";
 
   public static final String LOAN_WAIT_EXCHANGE_NAME = "loan-wait-exchange";
   public static final String LOAN_WAIT_QUEUE_NAME = "queue-loan-wait";
@@ -57,16 +43,6 @@ public class AmqpConfig {
   public static final String DLX_QUEUE_NAME = "queue-loan-dlx";
   public static final String LOAN_STATUS_DLX_QUEUE_NAME = "queue-loan-status-dlx";
   public static final String LOAN_STATUS_DLX_EXCHANGE_NAME = "loan-status-dlx-exchange";
-
-  public static final String PAYOUT_ROUTING_KEY = "client.payout-payment";
-  public static final String PAYOUT_PAYMENT_EXCHANGE_NAME = "payout-payment-exchange";
-  public static final String PAYOUT_PAYMENT_QUEUE_NAME = "queue-payout-payment";
-  public static final String PAYOUT_PAYMENT_ROUTING_KEY_TEMPLATE = "#.payout-payment";
-
-  public static final String MFO_PAYOUT_ROUTING_KEY = "client.payout-mfo";
-  public static final String MFO_PAYOUT_EXCHANGE_NAME = "payout-mfo-exchange";
-  public static final String MFO_PAYOUT_QUEUE_NAME = "queue-payout-mfo";
-  public static final String MFO_PAYOUT_ROUTING_KEY_TEMPLATE = "#.payout-mfo";
 
   @Value("${loan-status-delay}")
   private int loanStatusDelay;
@@ -140,24 +116,6 @@ public class AmqpConfig {
   }
 
   @Bean
-  public TopicExchange paymentTopicExchange() {
-    return new TopicExchange(PAYMENT_EXCHANGE_NAME);
-  }
-
-  @Bean
-  public Queue paymentQueue() {
-    return new Queue(PAYMENT_QUEUE_NAME);
-  }
-
-  @Bean
-  public Binding bindingPaymentQueue() {
-    return BindingBuilder
-        .bind(paymentQueue())
-        .to(paymentTopicExchange())
-        .with(PAYMENT_ROUTING_KEY_TEMPLATE);
-  }
-
-  @Bean
   public TopicExchange loanStatusTopicExchange() {
     return new TopicExchange(LOAN_STATUSES_EXCHANGE_NAME);
   }
@@ -188,78 +146,6 @@ public class AmqpConfig {
         .bind(loanIinStatusQueue())
         .to(loanStatusTopicExchange())
         .with(LOAN_STATUSES_IIN_ROUTING_KEY_TEMPLATE);
-  }
-
-  @Bean
-  public TopicExchange loanPaymentTopicExchange() {
-    return new TopicExchange(LOAN_PAYMENT_EXCHANGE_NAME);
-  }
-
-  @Bean
-  public Queue loanPaymentQueue() {
-    return new Queue(LOAN_PAYMENT_QUEUE_NAME);
-  }
-
-  @Bean
-  public Binding bindingloanPaymentQueue() {
-    return BindingBuilder
-        .bind(loanPaymentQueue())
-        .to(loanPaymentTopicExchange())
-        .with(LOAN_PAYMENT_ROUTING_KEY_TEMPLATE);
-  }
-
-  @Bean
-  public TopicExchange cashOutPaymentTopicExchange() {
-    return new TopicExchange(CASHOUT_PAYMENT_EXCHANGE_NAME);
-  }
-
-  @Bean
-  public Queue cashOutPaymentQueue() {
-    return new Queue(CASHOUT_PAYMENT_QUEUE_NAME);
-  }
-
-  @Bean
-  public Binding bindingCashOutPaymentQueue() {
-    return BindingBuilder
-        .bind(cashOutPaymentQueue())
-        .to(cashOutPaymentTopicExchange())
-        .with(CASHOUT_PAYMENT_ROUTING_KEY_TEMPLATE);
-  }
-
-  @Bean
-  public TopicExchange payOutPaymentTopicExchange() {
-    return new TopicExchange(PAYOUT_PAYMENT_EXCHANGE_NAME);
-  }
-
-  @Bean
-  public Queue payOutPaymentQueue() {
-    return new Queue(PAYOUT_PAYMENT_QUEUE_NAME);
-  }
-
-  @Bean
-  public Binding bindingPayoutOutPaymentQueue() {
-    return BindingBuilder
-        .bind(payOutPaymentQueue())
-        .to(payOutPaymentTopicExchange())
-        .with(PAYOUT_PAYMENT_ROUTING_KEY_TEMPLATE);
-  }
-
-  @Bean
-  public TopicExchange mfoPayOutPaymentTopicExchange() {
-    return new TopicExchange(MFO_PAYOUT_EXCHANGE_NAME);
-  }
-
-  @Bean
-  public Queue mfoPayOutPaymentQueue() {
-    return new Queue(MFO_PAYOUT_QUEUE_NAME);
-  }
-
-  @Bean
-  public Binding bindingMfoPayoutOutPaymentQueue() {
-    return BindingBuilder
-        .bind(mfoPayOutPaymentQueue())
-        .to(mfoPayOutPaymentTopicExchange())
-        .with(MFO_PAYOUT_ROUTING_KEY_TEMPLATE);
   }
 
   @Bean
