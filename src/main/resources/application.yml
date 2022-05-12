@@ -73,6 +73,24 @@ integration:
     username: ${TELEGRAM_GW_USER:test}
     password: ${TELEGRAM_GW_PASS:test}
     service-timeout: ${TELEGRAM_GW_TIMEOUT:30000}
+  acquiring:
+    url: ${INTEGRATION_ACQUIRING_URL:https://cards-stage.pitech.kz}
+    username: ${INTEGRATION_ACQUIRING_USERNAME:HAlza2msSvKJfp5QjH65IiUCtQ3Xsoo4}
+    password: ${INTEGRATION_ACQUIRING_PASSWORD:0xRd1AAkQc4GAB3pv0JlLM2zAyKEleNj}
+    connectTimeout: ${INTEGRATION_ACQUIRING_CONNECT_TIMEOUT:30000}
+    readTimeout: ${INTEGRATION_ACQUIRING_READ_TIMEOUT:45000}
+    paymentUrl: ${INTEGRATION_ACQUIRING_PAYMENT_URL:http://cards-stage.pitech.kz/gw/payments/cards/charge}
+    successReturnUrl: ${INTEGRATION_ACQUIRING_SUCCESS_RETURN_URL:http://localhost:4200/cabinet/history}
+    errorReturnUrl: ${INTEGRATION_ACQUIRING_ERROR_RETURN_URL:http://localhost:4200/cabinet/history}
+    callbackSuccessUrl: ${ACQUIRING_SUCCESS_CALLBACK_URL:http://localhost:4200/cabinet/history}
+    callbackErrorUrl: ${ACQUIRING_ERROR_CALLBACK_URL:http://localhost:4200/cabinet/history}
+  payout:
+    cardIdFrom: ${PAYOUT_CARD_FROM:card_-0I_7_Qw1aSqmjLGUFQ4p2gM_MijP6FK}
+    enabled: ${PAYOUT_ENABLED:true}
+    username: ${PAYOUT_USERNAME:admin}
+    password: ${PAYOUT_PASSWORD:$2a$12$.ZDWXoeurdLU2.bJ/e74Feps0zj4xrUfA1NHLfyaMGHhYsHzmJjfK}
+    callbackSuccessUrl: ${PAYOUT_SUCCESS_CALLBACK_URL:https://loan-stage.pitech.kz/api/payout/callback}
+    callbackErrorUrl: ${PAYOUT_ERROR_CALLBACK_URL:https://loan-stage.pitech.kz/api/payout/callback}
 
 jwt:
   secret: '${JWT_SECRET:A?D(G+KaPdSgVkYp3s6v9y$B&E)H@McQeThWmZq4t7w!z%C*F-JaNdRgUjXn2r5u}'
@@ -110,4 +128,4 @@ payment-services:
     username: ${COID_CONNECTOR_USER:loan-api-user}
     password: ${COID_CONNECTOR_PASS:q}
 
-loan-status-delay: ${WAIT_LOAN_STATUS_QUEUE_MESSAGE_DELAY:120000}
+loan-status-delay: ${WAIT_LOAN_STATUS_QUEUE_MESSAGE_DELAY:60000}

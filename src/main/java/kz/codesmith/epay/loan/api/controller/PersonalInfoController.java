@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "/clients")
 @Logged
-@PreAuthorize("hasAuthority('CLIENT_USER')")
 @RequiredArgsConstructor
 public class PersonalInfoController {
   private final IPersonalInfoService personalInfoService;
@@ -41,6 +40,12 @@ public class PersonalInfoController {
 
   @PostMapping(path = "/passport-info")
   public ResponseEntity<PassportInfoDto> savePassportInfo(@RequestBody PassportInfoDto passportInfoDto) {
+    Integer clientsId = userContextHolder.getContext().getOwnerId();
+    return ResponseEntity.ok(personalInfoService.savePassportInfo(passportInfoDto, clientsId));
+  }
+
+  @GetMapping(path = "/passport-info")
+  public ResponseEntity<PassportInfoDto> getPassportInfo(@RequestBody PassportInfoDto passportInfoDto) {
     Integer clientsId = userContextHolder.getContext().getOwnerId();
     return ResponseEntity.ok(personalInfoService.savePassportInfo(passportInfoDto, clientsId));
   }

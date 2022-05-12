@@ -153,6 +153,12 @@ public class OrderEntity {
   @Type(type = "JsonMapDataType")
   private Map<String, Object> incomesInfo = new HashMap<>();
 
+  @Column(name = "rest_amount")
+  private BigDecimal restAmount;
+
+  @Column(name = "rest_period")
+  private Integer restPeriod;
+
   @PrePersist
   public void toCreate() {
     setInsertedTime(Utils.now());

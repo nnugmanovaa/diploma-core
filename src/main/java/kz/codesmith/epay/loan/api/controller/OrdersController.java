@@ -18,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,7 +32,6 @@ import springfox.documentation.annotations.ApiIgnore;
 public class OrdersController {
   private final IOrdersService ordersService;
 
-  @PreAuthorize("hasAuthority('CLIENT_USER')")
   @ApiPageable
   @ApiOperation(
       value = "Retrieves orders",
@@ -51,5 +52,15 @@ public class OrdersController {
         states,
         pageRequest
     ));
+  }
+
+  @ApiOperation(
+      value = "Approve order by ID.",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @PutMapping(value = "/{id}/approve", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<?> approveOrder(@PathVariable("id") @NotNull Integer orderId) {
+    ordersService.approveOrder(orderId);
+    return ResponseEntity.ok().build();
   }
 }

@@ -134,4 +134,8 @@ public interface LoanOrdersRepository extends JpaRepository<OrderEntity, Integer
   @Query(value = "select o.* from loan.loan_orders o where o.client_id = ?1 "
       + " and o.order_status = ?2 order by order_id desc limit 1", nativeQuery = true)
   Optional<OrderEntity> findByClientIdAndStatus(Integer clientId, String status);
+
+  Optional<OrderEntity> findByOrderId(Integer orderId);
+
+  Optional<OrderEntity> findByIinAndStatus(String iin, OrderState orderState);
 }

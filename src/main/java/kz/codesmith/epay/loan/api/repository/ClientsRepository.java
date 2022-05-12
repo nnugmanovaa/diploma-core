@@ -23,6 +23,8 @@ public interface ClientsRepository extends JpaRepository<ClientEntity, Integer> 
 
   Optional<ClientEntity> findByClientName(String name);
 
+  Optional<ClientEntity> findByIin(String iin);
+
   Page<ClientEntity> findAllByClientNameStartingWithOrderByClientName(String startTemplate,
       Pageable pageable);
 

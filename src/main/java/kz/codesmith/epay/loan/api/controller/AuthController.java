@@ -64,19 +64,17 @@ public class AuthController {
         .roles(userDetails.getUserAuthorities())
         .build();
 
-    if (userDetails.getUserAuthorities().contains("CLIENT_USER")) {
-      Optional<ClientDto> clientDto = clientsServices
-          .getClientByClientName(userDetails.getUsername());
-      clientDto.ifPresent(client -> {
-        response
-            .setIdentificationStatus(client.getIdentificationStatus());
-        response.setClientId(client.getClientsId());
-        response.setFirstName(client.getFirstName());
-        response.setLastName(client.getLastName());
-        response.setMiddleName(client.getMiddleName());
-        response.setIin(client.getIin());
-      });
-    }
+    Optional<ClientDto> clientDto = clientsServices
+        .getClientByClientName(userDetails.getUsername());
+    clientDto.ifPresent(client -> {
+      response
+          .setIdentificationStatus(client.getIdentificationStatus());
+      response.setClientId(client.getClientsId());
+      response.setFirstName(client.getFirstName());
+      response.setLastName(client.getLastName());
+      response.setMiddleName(client.getMiddleName());
+      response.setIin(client.getIin());
+    });
 
     return ResponseEntity.ok(response);
   }

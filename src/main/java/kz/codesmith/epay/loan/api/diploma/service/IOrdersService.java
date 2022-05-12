@@ -2,6 +2,7 @@ package kz.codesmith.epay.loan.api.diploma.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import kz.codesmith.epay.loan.api.domain.orders.OrderEntity;
 import kz.codesmith.epay.loan.api.model.orders.OrderDto;
 import kz.codesmith.epay.loan.api.model.orders.OrderState;
 import org.springframework.data.domain.Page;
@@ -15,4 +16,8 @@ public interface IOrdersService {
       List<OrderState> states,
       Pageable pageRequest
   );
+
+  OrderEntity getOrderByUserOwner(Integer orderId);
+
+  OrderDto approveOrder(Integer orderId);
 }

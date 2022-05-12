@@ -3,6 +3,7 @@ package kz.codesmith.epay.loan.api.controller;
 import io.swagger.annotations.ApiOperation;
 import javax.validation.Valid;
 import kz.codesmith.epay.core.shared.model.clients.ClientCreateDto;
+import kz.codesmith.epay.core.shared.model.clients.ClientDto;
 import kz.codesmith.epay.loan.api.diploma.model.SimpleClientPasswordChangeDto;
 import kz.codesmith.epay.loan.api.diploma.model.UserPasswordChangeDto;
 import kz.codesmith.epay.loan.api.service.IClientsServices;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,7 +42,6 @@ public class ClientsMngmController {
     return ResponseEntity.ok().build();
   }
 
-  @PreAuthorize("hasAuthority('CLIENT_USER')")
   @ApiOperation(
       value = "Смена пароля у пользователя.",
       produces = MediaType.APPLICATION_JSON_VALUE
@@ -52,4 +54,14 @@ public class ClientsMngmController {
     return ResponseEntity.ok().build();
   }
 
+  @ApiOperation(
+      value = "Get client info.",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  @GetMapping("/{clientName}")
+  public ResponseEntity<ClientDto> getClientInfo(
+      @PathVariable("clientName") String clientName
+  ) {
+    return ResponseEntity.ok(clientsServices.getClientByClientName(clientName).get());
+  }
 }
